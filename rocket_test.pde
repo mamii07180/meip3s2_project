@@ -11,11 +11,14 @@ ArrayList<Bullet> myBullets;
 ArrayList<Bullet> eneBullets; //相手の弾（今回はいらない）
 int hp=1000;
 int hit=0;
+int a=1;
+int da=1;
 float d;
 float xx,yy;
 boolean state=false;
 void setup(){
-  size(1280, 1280);
+//  size(1280, 1280);
+  fullScreen();
   rectMode(CENTER);
   myself = new Myself();
   enemies = new ArrayList<Enemy>();
@@ -42,23 +45,28 @@ void setup(){
 
 void draw(){
   if(hp<=0) { //HPがなくなったら止まる
+    noStroke();
     textSize(86);
     fill(255);
     text("GAME OVER !!", width/2, height/2);
-    fill(255);
+    if(width/2<=mouseX && mouseX<=width/2+180 && height/2+20<=mouseY && mouseY<=height/2+80) {
+      fill(255,0,0);
+    } else {
+      fill(255);
+    }
     rect(width/2+90, height/2+50, 180, 60);
     textSize(50);
     fill(0);
     text("REPLAY", width/2, height/2+70);
-  } else {
-  background(0);
-  myself.display();
-  for(Enemy enemy: enemies){
-    enemy.display();
-  }
-  for(Bullet bullet: myBullets){
-    bullet.display();
-  }
+  } else { //--------------------ゲーム
+    background(0);
+    myself.display();
+    for(Enemy enemy: enemies){
+      enemy.display();
+    }
+    for(Bullet bullet: myBullets){
+      bullet.display();
+    }
 /*  for(Bullet bullet: eneBullets){
     bullet.display();
   }*/
@@ -98,6 +106,12 @@ void draw(){
 //    enemies.add(new Enemy(mouseX, mouseY, d)); //右クリックで敵追加
   }
   
+  //カーソルの表示
+  stroke(255-a,255,a);
+  line(mouseX, mouseY+8, mouseX, mouseY-8);    //撃つ方向
+  line(mouseX-8, mouseY,mouseX+8,  mouseY);    //撃つ方向
+
+  
   //HPと撃墜数の表示
   fill(255);
   textSize(26);
@@ -110,6 +124,7 @@ void draw(){
 
 class Myself{ //-------------------------ロケット
   
+  int i=0;
   PVector loc;
   float size;
   float dmx,dmy,angle;
@@ -117,16 +132,17 @@ class Myself{ //-------------------------ロケット
   boolean isDead;
   
   Myself(){ 
-    size = 25;
+    size = 40;
     loc = new PVector(width / 2, height - size / 2 - 10);
     coolingTime = 0;
     isDead = false;
   }
   
   void display(){
-    if(isDead){
+    if(isDead || i%6!=0){
       fill(255, 255, 0);
-      stroke(0, 255, 0); 
+      stroke(0, 255, 0);
+      i = i++;
     } else {
       fill(255,0,0);
       stroke(255,0, 0);
@@ -160,6 +176,7 @@ class Myself{ //-------------------------ロケット
       if((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
          && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)){
         isDead = true;
+        i = i++;
         b.isDead = true;
         break;
       }
@@ -167,6 +184,7 @@ class Myself{ //-------------------------ロケット
     for(Enemy e: enemies){
       if(abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2){
         isDead = true;
+        i = i++;
         e.isDead = true;
         hp = hp-100;
         break;
@@ -241,8 +259,18 @@ class Enemy{ //-------------------------------敵
   }
   
   void display(){
-    fill(206,117,48);
-    stroke(206,117,48);
+//    fill(206,117,48);
+a=a+da;
+    if(a>255) {
+      a=255;
+      da = -1;
+    }
+    if(a<0) {
+      a=0;
+      da = 1;
+    }
+    fill(255-a,255,a);
+    stroke(255-a,255,a);
     ellipse(loc.x, loc.y, size, size);
     //rect(loc.x, loc.y, size, size);
   }
@@ -252,11 +280,11 @@ class Enemy{ //-------------------------------敵
     if(loc.y > height){
       isDead = true;
     }
-    coolingTime++;
-    if(coolingTime >= 60){
-      eneBullets.add(new Bullet(this));
-      coolingTime = 0;
-    }
+//    coolingTime++;
+//    if(coolingTime >= 60){
+//      eneBullets.add(new Bullet(this));
+//      coolingTime = 0;
+//    }
     for(Bullet b: myBullets){ //あたり判定
       if((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
          && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)){
