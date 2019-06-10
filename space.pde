@@ -1,5 +1,13 @@
 // SpaceShooting Sample / Written by n_ryota
 
+
+
+//kinect準備
+import KinectPV2.KJoint;
+import KinectPV2.*;
+
+KinectPV2 kinect;
+
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
 Player player = new Player(0, 0, 100, 10);  // プレイヤー
@@ -143,6 +151,12 @@ void setup() {
     fighterList.add(new Enemy(random(-2000, 2000), random(-2000, 2000), random(-5000, -40000), 150));
   }
   textFont( createFont("Lucida Console", 20) );
+  kinect = new KinectPV2(this);
+
+  kinect.enableSkeletonColorMap(true);
+  kinect.enableColorImg(true);
+
+  kinect.init();
 }
 
 // 毎フレームの進行と描画
@@ -217,22 +231,34 @@ void draw(){
 }
 
 // 毎フレームの入力
-void input(){
-  if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) {
-    float rotYLevel = map(mouseX, 0, width, -1, 1);
-    float rotXLevel = map(mouseY, 0, height, -1, 1);
-    player.roll(rotXLevel * abs(rotXLevel) * 3.0, -rotYLevel * abs(rotYLevel) * 3.0, 0.0f);
-  }
+void input()
+{
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  
+    //individual JOINTS
+    for (int i = 0; i < skeletonArray.size(); i++)
+    {
+      KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+      if (skeleton.isTracked()) 
+      {
+        KJoint[] joints = skeleton.getJoints();
+        if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) 
+        {
+         float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
+         float InputLeft=constrain(map(LeftDiff,50,500,0,1),0,1);//50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+
+         float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
+         float InputRight=constrain(map(RightDiff,50,500,0,1),0,1);
+         player.roll(0.0f,InputLeft-InputRight, 0.0f);
+        }
+      }
+    }
   if(player.life>0) {
     if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
     else player.vel.mult(0.98);
   }
 }
 
-// マウスボタンを押した瞬間
-void mousePressed() {
-  if(player.life>0 && mouseButton==LEFT) player.shoot(30, 1);
-}
 
 // 爆発エフェクトを追加
 void addExplosionEffect(Chara chara) {
