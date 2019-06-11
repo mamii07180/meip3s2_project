@@ -1,4 +1,6 @@
 import com.leapmotion.leap.*;
+import processing.net.*;
+
 
 /**
 * simple 2D shooter game
@@ -6,6 +8,7 @@ import com.leapmotion.leap.*;
 * @author aa_debdeb
 * @date 2016/08/30
 */
+
 Controller leap = new Controller();         // leap という名前で Controller オブジェクトを宣言
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
@@ -19,19 +22,27 @@ int hit=0;
 int a=1;
 int da=1;
 int resizeX,resizeY;
-float w2,h2;
+float w2,h2; //画面の半分サイズ（よく使うので）
 float d;
 float xx,yy;
 boolean state=false;
+
+//通信用
+Server s;
+Client client;
+String input;
+int data[];
+
 void setup(){
-//  size(1280, 1280);
-  fullScreen(P3D);
+  s = new Server(this, 12345); // Start a simple server on a port
+  
+  size(1280,1280);
+//  fullScreen(P3D);
   resizeX = (int)width/500;
   resizeY = (int)height/200;
   w2 = width/2;
   h2 = height/2;
-//  int resizeX = weight/500;
-  rectMode(CENTER);
+
   myself = new Myself();
   enemies = new ArrayList<Enemy>();
   myBullets = new ArrayList<Bullet>();
@@ -60,17 +71,17 @@ void draw(){
     noStroke();
     textSize(86);
     fill(255);
-    text("GAME OVER !!", width/2, height/2);
-    if(width/2<=mouseX && mouseX<=width/2+180 && height/2+20<=mouseY && mouseY<=height/2+80) {
+    text("GAME OVER !!", w2, h2);
+    if(w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) {
       fill(255,0,0);
     } else {
  
       fill(255);
     }
-    rect(width/2+90, height/2+50, 180, 60);
+    rect(w2+90, h2+50, 180, 60);
     textSize(50);
     fill(0);
-    text("REPLAY", width/2, height/2+70);
+    text("REPLAY", w2, h2+70);
   } else { //--------------------ゲーム
       Frame frame = leap.frame();               // Frame オブジェクトを宣言し、leap のフレームを入れる
       HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
@@ -79,7 +90,7 @@ void draw(){
     background(0);
     stroke(255);
     noFill();
-    rect(w2, h2, width-30, height-30);
+    rect(5, 5, width-5, height-5); 
     myself.display();
     for(Enemy enemy: enemies){
       enemy.display();
@@ -181,13 +192,13 @@ class Myself{ //-------------------------ロケット
   int i=0;
   PVector loc;
   float size;
-  float dmx,dmy,angle;
+  float dmx,dmy,angle,rocketX,rocketY;
   int coolingTime;
   boolean isDead;
   
   Myself(){ 
     size = 40;
-    loc = new PVector(width / 2, height - size / 2 - 10);
+    loc = new PVector(w2, height - size / 2 - 10);
     coolingTime = 0;
     isDead = false;
   }
@@ -201,26 +212,48 @@ class Myself{ //-------------------------ロケット
       fill(255,0,0);
       stroke(255,0, 0);
     }
-    pushMatrix();
-    translate(loc.x, loc.y);//円の中心に座標を合わせます
-    rotate(angle);
-    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+    ellipse(loc.x, loc.y, size, size);
     fill(0,255,0);
-    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
-    popMatrix();
+    ellipse(loc.x, loc.y, size/2, size/2);
+//    pushMatrix();
+//    translate(loc.x, loc.y);//円の中心に座標を合わせます
+//    rotate(angle);
+//    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+//    fill(0,255,0);
+//    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
+//    popMatrix();
   }
   
   void update(){
     isDead = false;
-    float dmx = mouseX - loc.x;
-    float dmy = mouseY - loc.y;
-    if(dmx != 0 && dmy !=0){
-      angle = angle+constrain(atan2(dmx,-dmy)-angle, -PI/12, PI/12);
+    
+    // Receive data from client
+    client = s.available();
+    if (client != null) {
+      input = client.readString();
+      input = input.substring(0, input.indexOf("\n")); // Only up to the newline
+      data = int(split(input, ' ')); // Split values into an array
+      // Draw line using received coords
+      if(data[0]==0){
+        stroke(0);
+        rocketX = data[1];
+        rocketY = data[2];
+        loc.x=rocketX;
+        loc.y=rocketY;
+      } else if(data[0]==1){
+        angle = data[1];
+      }
     }
-    dmx = constrain(dmx, -3, 3); //最小値-5最大値5
-    loc.x += dmx;
-    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
-    loc.y += dmy; 
+
+//    float dmx = rocketX - loc.x;
+//    float dmy = rocketY - loc.y;
+//    if(dmx != 0 && dmy !=0){
+//      angle = angle+constrain(atan2(dmx,-dmy)-angle, -PI/12, PI/12);
+//    }
+//    dmx = constrain(dmx, -3, 3); //最小値-5最大値5
+   // loc.x += dmx;
+//    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
+   // loc.y += dmy; 
     coolingTime++;
     if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
       myBullets.add(new Bullet());
@@ -373,7 +406,7 @@ void mouseReleased()
     enemies.add(new Enemy(xx, yy, d));
     state =false;
   }
-  if(mouseX<=width/2+180&&mouseY<=height/2+80&&mouseX>=width/2&&mouseY>=height/2+20){
+  if(mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
     hp = 1000;
     hit = 0;
     background(0);
