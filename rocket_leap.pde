@@ -142,8 +142,6 @@ void draw(){
       Hand hand = hands.get(i);               // Hand オブジェクトを宣言し、i 番目の手を取得
       drawFingerTip(hand);                    // drawFingerTip 関数を呼ぶ
   }
-
-
   
   //HPと撃墜数の表示
   fill(255);
@@ -212,16 +210,16 @@ class Myself{ //-------------------------ロケット
       fill(255,0,0);
       stroke(255,0, 0);
     }
-    ellipse(loc.x, loc.y, size, size);
-    fill(0,255,0);
-    ellipse(loc.x, loc.y, size/2, size/2);
-//    pushMatrix();
-//    translate(loc.x, loc.y);//円の中心に座標を合わせます
-//    rotate(angle);
-//    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+//    ellipse(loc.x, loc.y, size, size);
 //    fill(0,255,0);
-//    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
-//    popMatrix();
+//    ellipse(loc.x, loc.y, size/2, size/2);
+    pushMatrix();
+    translate(loc.x, loc.y);//円の中心に座標を合わせます
+    rotate(angle);
+    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+    fill(0,255,0);
+    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
+    popMatrix();
   }
   
   void update(){
@@ -240,9 +238,16 @@ class Myself{ //-------------------------ロケット
         rocketY = data[2];
         loc.x=rocketX;
         loc.y=rocketY;
-      } else if(data[0]==1){
-        angle = data[1];
+      }else if(data[0]==1){
+        angle = data[1]*PI/2;
+        if( coolingTime >= 10){
+          myBullets.add(new Bullet());
+          coolingTime = 0;
+        }
       }
+        fill(255);
+        textSize(26);
+        text(data[1], 10, 85);
     }
 
 //    float dmx = rocketX - loc.x;
@@ -255,10 +260,11 @@ class Myself{ //-------------------------ロケット
 //    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
    // loc.y += dmy; 
     coolingTime++;
-    if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
+/*    if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
       myBullets.add(new Bullet());
       coolingTime = 0;
-    }
+    }*/
+/*    
     for(Bullet b: eneBullets){
       if((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
          && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)){
@@ -268,6 +274,7 @@ class Myself{ //-------------------------ロケット
         break;
       }
     }
+*/    
     for(Enemy e: enemies){
       if(abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2){
         isDead = true;
