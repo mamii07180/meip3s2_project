@@ -26,6 +26,7 @@ float w2,h2; //画面の半分サイズ（よく使うので）
 float d;
 float xx,yy;
 boolean state=false;
+int ene_number=0; //個体番号
 
 //通信用
 Server s;
@@ -48,22 +49,21 @@ void setup(){
   myBullets = new ArrayList<Bullet>();
   eneBullets = new ArrayList<Bullet>(); 
   for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
-    for(Enemy enemy: enemies){
-      enemy.display();
-    }
+    ene_number = ene_number+1;
+    enemies.add(new Enemy(0,0,random(25)*2,ene_number)); //0,0なら適当に半径生成される(classに記載)
+  }
   //敵のリスト更新
     ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
     for(Enemy enemy: enemies){
       enemy.update();
-      if(!enemy.isDead){
+//      if(!enemy.isDead){ //初回は死滅しないのでいらない
         nextEnemies.add(enemy);
-      }
+//      }
     }
     enemies = nextEnemies;
-  //  if(random(1) < 0.02){ //更新100回に2回の割合で敵作製
-      enemies.add(new Enemy(0,0,random(25)*2));
-  //  }
-  }
+    for(Enemy enemy: enemies){
+      enemy.display();
+    }
 }
 
 void draw(){
@@ -82,6 +82,32 @@ void draw(){
     textSize(50);
     fill(0);
     text("REPLAY", w2, h2+70);
+    if( mousePressed == true && mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
+      hp = 1000;
+      hit = 0;
+      s.write(2+" "+hit + "\n");
+      s.write(3+" "+hp + "\n");
+      background(0);
+      for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
+        for(Enemy enemy: enemies){
+          enemy.display();
+        }
+        //敵のリスト更新
+        ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
+        for(Enemy enemy: enemies){
+          enemy.update();
+          if(!enemy.isDead){
+              nextEnemies.add(enemy);
+          }
+        }
+        enemies = nextEnemies;
+  //  if(random(1) < 0.02){ //更新100回に2回の割合で敵作製
+  ene_number = ene_number+1;
+        enemies.add(new Enemy(0,0,random(25)*2,ene_number));
+  //  }
+      }
+    }
+  
   } else { //--------------------ゲーム
       Frame frame = leap.frame();               // Frame オブジェクトを宣言し、leap のフレームを入れる
       HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
@@ -105,11 +131,15 @@ void draw(){
   myself.update();
   //敵のリスト更新
   ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
+  int j=0;
   for(Enemy enemy: enemies){
     enemy.update();
     if(!enemy.isDead){
       nextEnemies.add(enemy);
+    } else {
+        s.write(2+" "+hit + " "+ j + "\n");
     }
+    j=j++;
   }
   enemies = nextEnemies;
   //銃リスト更新
@@ -142,8 +172,6 @@ void draw(){
       Hand hand = hands.get(i);               // Hand オブジェクトを宣言し、i 番目の手を取得
       drawFingerTip(hand);                    // drawFingerTip 関数を呼ぶ
   }
-
-
   
   //HPと撃墜数の表示
   fill(255);
@@ -184,7 +212,8 @@ void drawFingerTip(Hand hand) {
   text(fx, width-50, 50); //-250~250がよさそう
   textSize(56);
   text(fy, width-50, 50); //-250~250がよさそう
-    
+
+
 }
 
 class Myself{ //-------------------------ロケット
@@ -212,16 +241,16 @@ class Myself{ //-------------------------ロケット
       fill(255,0,0);
       stroke(255,0, 0);
     }
-    ellipse(loc.x, loc.y, size, size);
-    fill(0,255,0);
-    ellipse(loc.x, loc.y, size/2, size/2);
-//    pushMatrix();
-//    translate(loc.x, loc.y);//円の中心に座標を合わせます
-//    rotate(angle);
-//    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+//    ellipse(loc.x, loc.y, size, size);
 //    fill(0,255,0);
-//    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
-//    popMatrix();
+//    ellipse(loc.x, loc.y, size/2, size/2);
+    pushMatrix();
+    translate(loc.x, loc.y);//円の中心に座標を合わせます
+    rotate(angle);
+    drawTriangle(0, 0, size);  // 横の位置、縦の位置、円の半径
+    fill(0,255,0);
+    drawTriangle(0, -size/2, size/2);  // てっぺんを青く
+    popMatrix();
   }
   
   void update(){
@@ -240,9 +269,16 @@ class Myself{ //-------------------------ロケット
         rocketY = data[2];
         loc.x=rocketX;
         loc.y=rocketY;
-      } else if(data[0]==1){
-        angle = data[1];
+      }else if(data[0]==1){
+        angle = -data[1]*PI/2;
+        if( coolingTime >= 10){
+          myBullets.add(new Bullet());
+          coolingTime = 0;
+        }
       }
+        fill(255);
+        textSize(26);
+        text(data[1], 10, 85);
     }
 
 //    float dmx = rocketX - loc.x;
@@ -255,10 +291,11 @@ class Myself{ //-------------------------ロケット
 //    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
    // loc.y += dmy; 
     coolingTime++;
-    if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
+/*    if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
       myBullets.add(new Bullet());
       coolingTime = 0;
-    }
+    }*/
+/*    
     for(Bullet b: eneBullets){
       if((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
          && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)){
@@ -268,12 +305,14 @@ class Myself{ //-------------------------ロケット
         break;
       }
     }
+*/    
     for(Enemy e: enemies){
       if(abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2){
         isDead = true;
         i = i++;
         e.isDead = true;
         hp = hp-100;
+        s.write(3+" "+hp + "\n");
         break;
       }
     }
@@ -326,13 +365,16 @@ class Bullet{ //-------------------------銃
 class Enemy{ //-------------------------------敵
   
   PVector loc;
+  PVector syoki_loc;
 //  float vel;
   float size;
   int coolingTime;
   boolean isDead;
+  int number;
   
-  Enemy(float x, float y, float dis){
+  Enemy(float x, float y, float dis, int ene_number){
     size = dis;
+    number = ene_number;
 //  Enemy(){
 //    size = random(25)*2;
     if (x==0&&y==0){
@@ -343,11 +385,12 @@ class Enemy{ //-------------------------------敵
 //    vel = 3;
     coolingTime = int(random(60));
     isDead = false;
+    s.write(2+" "+number+" "+loc.x+" "+loc.y+" "+size+"\n");  //個体番号、座標、半径を送信
   }
   
   void display(){
 //    fill(206,117,48);
-a=a+da;
+    a=a+da;
     if(a>255) {
       a=255;
       da = -1;
@@ -378,6 +421,7 @@ a=a+da;
         isDead = true;
         b.isDead = true;
         hit = hit+1;
+        s.write(4+" "+number+" "+(int)loc.x+" "+(int)loc.y+"\n");  //死滅した個体番号を送信
         break;
       }
     }
@@ -403,12 +447,15 @@ void mouseReleased()
 { 
   if(mouseButton==RIGHT){
     d = dist(xx, yy, mouseX, mouseY);
-    enemies.add(new Enemy(xx, yy, d));
+    ene_number=ene_number+1;
+    enemies.add(new Enemy(xx, yy, d,ene_number));
     state =false;
   }
-  if(mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
+/*  if(mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
     hp = 1000;
     hit = 0;
+    s.write(2+" "+hit + "\n");
+    s.write(2+" "+hit + "\n");
     background(0);
       for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
     for(Enemy enemy: enemies){
@@ -428,5 +475,5 @@ void mouseReleased()
   //  }
   }
 
-  }
+  }*/
 }
