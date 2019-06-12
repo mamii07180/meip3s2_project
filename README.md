@@ -21,6 +21,6 @@
 * LEAP Motionでカーソル表示
 * プロジェクターで投影・位置調整
 * LEAP motionからサイズ・位置の障害物を配置する
+* kinect側にHIT数・HP・敵の死滅情報を送信
 ### やること1
 * kinect側とロケット位置を連携
-* kinect側にHIT数・HP・敵の死滅情報を送信
