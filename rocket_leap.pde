@@ -37,8 +37,8 @@ int data[];
 void setup(){
   s = new Server(this, 12345); // Start a simple server on a port
   
-  size(1280,1280);
-//  fullScreen(P3D);
+//  size(1280,1280);
+  fullScreen(P3D);
   resizeX = (int)width/500;
   resizeY = (int)height/200;
   w2 = width/2;
@@ -160,7 +160,8 @@ void draw(){
     }
   }
   eneBullets = nextEneBullets;*/
-  if(mousePressed && mouseButton==RIGHT && state == false) {
+  if(mousePressed && mouseButton==RIGHT &&
+  state == false &&  dist(myself.loc.x, myself.loc.y, mouseX, mouseY)>=100){
     xx = mouseX;
     yy = mouseY;
     state = true;
@@ -176,22 +177,29 @@ void draw(){
   //HPと撃墜数の表示
   fill(255);
   textSize(26);
+  noFill();
+  stroke(255);
+  rect(62, 12,106, 18);
+  fill(0,255,0);
   text("HP", 10, 35);
-  text(hp, 60, 35);
+//  text(hp, 60, 35);
+  rectMode(CORNER);
+  noStroke();
+  rect(65, 15, hp/10, 12);
+  fill(255);
   text("HIT", 10, 60);
   text(hit, 60, 60);
   }
 }
 
-void drawFingerTip(Hand hand) {
-    FingerList fingers = hand.fingers();        // FingerList オブジェクトに見つかった指の情報（複数）を入れる
-    Finger finger = fingers.get(1);           // 指 i を取得（0:親指, 1:人差し指, 2:中指, 3:薬指, 4:小指）
-    Vector tipPos = finger.tipPosition();     // その指の指先（tip）の位置を取得
+void drawFingerTip(Hand hand) { //----------------------------LEAP
+  FingerList fingers = hand.fingers();        // FingerList オブジェクトに見つかった指の情報（複数）を入れる
+  Finger finger = fingers.get(1);           // 指 i を取得（0:親指, 1:人差し指, 2:中指, 3:薬指, 4:小指）
+  Vector tipPos = finger.tipPosition();     // その指の指先（tip）の位置を取得
 //    Vector tipPosNorm = iBox.normalizePoint(tipPos, false);   // 標準化された座標値に変換
-  float fx,fy; //指の位置
-  fx = resizeX*tipPos.getX();
-  fy = resizeY*tipPos.getZ();
-  if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){
+  float fx = resizeX*tipPos.getX();
+  float fy = resizeY*tipPos.getZ();
+  if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){ //画面外だったら
     float x=fx+ w2;
     float y=fy+ w2;
     if(fx<= -w2) x=0;
@@ -199,10 +207,18 @@ void drawFingerTip(Hand hand) {
     if(fy<= -h2) y=0;
     if(fy>= h2) y=height;  
     stroke(255);
-    drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
+    drawTriangle(x, y, 50);
   }else {
+    float d = dist(myself.loc.x, myself.loc.y, fx+w2, fy+h2);
+    text(d, w2, h2); //-250~250がよさそう    
+    if ( d<=100 ){ //ロケットとカーソルの位置が近すぎたら
+      noFill();
+      strokeWeight(5);
+      stroke(255, 0, 0);
+      ellipse(myself.loc.x, myself.loc.y, 2*d, 2*d);
+    } 
     if(finger.isExtended() == true) stroke(255-a,255,a);        // その指が伸びて（isExtended）いたら   
-    else       stroke(255, 0, 0);                           // そうでなければ（伸びていなければ）                 // 塗りつぶし色を白に
+    else  stroke(255, 0, 0);                           // そうでなければ（伸びていなければ）                 // 塗りつぶし色を白に
     strokeWeight(5);
     line(fx+ w2, fy+16+ h2, fx+ w2, fy-16+ h2);    //撃つ方向
     line(fx-16+ w2, fy+ h2, fx+16+ w2,  fy+ h2);    //撃つ方向
@@ -212,8 +228,6 @@ void drawFingerTip(Hand hand) {
   text(fx, width-50, 50); //-250~250がよさそう
   textSize(56);
   text(fy, width-50, 50); //-250~250がよさそう
-
-
 }
 
 class Myself{ //-------------------------ロケット
@@ -445,7 +459,7 @@ void drawTriangle(float x, float y, float r) { //三角形の描画
 
 void mouseReleased() 
 { 
-  if(mouseButton==RIGHT){
+  if(mouseButton==RIGHT && dist(myself.loc.x, myself.loc.y, mouseX, mouseY)>=100){
     d = dist(xx, yy, mouseX, mouseY);
     ene_number=ene_number+1;
     enemies.add(new Enemy(xx, yy, d,ene_number));
