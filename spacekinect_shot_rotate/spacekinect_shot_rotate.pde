@@ -1,21 +1,31 @@
 // SpaceShooting Sample / Written by n_ryota
 //change
+
+import processing.net.*;
 import KinectPV2.KJoint;
 import KinectPV2.*;
 KinectPV2 kinect;
 int bu = 0;
+Client c;
+String input;
+int j = 15;
+int data[];
+
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
 Player player = new Player(0, 0, 100, 10);  // プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
-ArrayList effectList = new ArrayList();     // エフェクトリスト
+ArrayList effectList = new ArrayList(); 
+
+ArrayList<Enemy> enemies;    //change
+// エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
 int clearMillis = 0;                        // クリアタイム
 
 // 3D空間に配置する基本オブジェクトクラス
-class Chara { 
+class Chara {
   PMatrix3D matrix = new PMatrix3D();
   PVector pos = new PVector(), vel = new PVector();
   float radius, life;
@@ -62,11 +72,11 @@ class Chara {
 
 // 戦闘機クラス
 class Fighter extends Chara  {
-  //Charaの_x,_y,_z,_radius,_groupを使う
   Fighter(float _x, float _y, float _z, float _radius, int _group) { super(_x, _y, _z, _radius, _group); }
   Bullet shoot(int power, float radian) {
     Bullet bullet = new Bullet(pos.x, pos.y, pos.z, 7, group, power);
     bullet.matrix.set(matrix);
+    if(radian>0) bullet.roll(random_pm(radian), random_pm(radian), random_pm(radian));  // 少し向きをランダムにばらけさせる
     bullet.accel(70);
     bulletList.add(bullet);
     return bullet;
@@ -79,40 +89,14 @@ class Player extends Fighter {
   void drawShape() {
     stroke(0, 255, 0, 64); strokeWeight(2); noFill();
     translate(0, 0, -10);
-    box(radius, radius, radius*10);
+    box(radius, radius, radius*5);
     noStroke();
   }
 }
-
+//change
 // 敵戦闘機クラス
-class Enemy extends Fighter {
-  int level;
-  Enemy(float _x, float _y, float _z, float _radius) {
-    super(_x, _y, _z, _radius, ENEMY); 
-    level = int(random(3));
-  }
-  void update() {
-    // プレイヤーの方に向いて移動
-    PVector vz = new PVector(pos.x-player.pos.x, pos.y-player.pos.y, pos.z-player.pos.z);
-    vz.normalize();
-    float leapLevel = 0.05 * (1 + level);
-    vz.x = lerp(matrix.m02, vz.x, leapLevel); 
-    vz.y = lerp(matrix.m12, vz.y, leapLevel); 
-    vz.z = lerp(matrix.m22, vz.z, leapLevel); // 現在ベクトルからなめらかに補間
-    vz.normalize();
-    lookAt(vz);
-    accel(0.01 * level);
-    super.update();
-    if( millis()>3000*(1+level) && 0==(millis() % (100-level*20)) ) shoot(10, radians(10 + 10*level)); // ゲーム開始後、一定秒経過したあと、たまに弾発射
-  }
-  void drawShape() {
-    fill(200, 200, 200);
-    box(radius*1.5, radius*0.1, radius);
-    rotateX(radians(45));
-    box(radius*0.8, radius*0.7, radius);
-  }
-}
 
+//stop
 // 弾クラス
 class Bullet extends Chara  {
   int power;
@@ -123,7 +107,7 @@ class Bullet extends Chara  {
   void drawShape() {
     damage(0.5);
     if(group==PLAYER) stroke(0, 128, 255, 128);
-    else stroke(255, 0, 0, 128);//敵の弾は赤
+    else stroke(255, 0, 0, 128);
     strokeWeight(4); fill(255);
     translate(0, radius*7, 0);
     box(radius, radius, radius*20);
@@ -142,21 +126,68 @@ class Effect extends Chara  {
   }
 }
 
+
+
+//change
+class Enemy extends Chara{ //-------------------------------敵
+  PVector loc;
+  float size;
+  int coolingTime;
+  boolean isDead;
+  int index;
+  Enemy(float x, float y, float z, float dis,int a){
+    super(x, y, z, dis, ENEMY);
+    size = dis;
+    index = a;
+    if (x==0&&y==0){
+      loc = new PVector(random(-2000,2000), random(-2000,2000));
+    } else {
+      loc = new PVector(x,y);
+    }
+    coolingTime = int(random(60));
+    isDead = false;
+  }
+  
+  void drawShape() {
+    fill(0, 220, 0);
+    pushMatrix();
+    translate(loc.x,loc.y);
+    sphere(size);
+    popMatrix();
+  }
+  
+ 
+}
+
+//stop
+
 // 初期化
 void setup() {
   size(640, 480, P3D);
   //change
+  c = new Client(this,"127.0.0.1",12345);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
   kinect.init();
   frameRate(60);
+  enemies = new ArrayList<Enemy>();
   //stop
   fighterList.add(player);
-  for(int i=0; i<10; i++) {
-    fighterList.add(new Enemy(random(-2000, 2000), random(-2000, 2000), random(-5000, -40000), 150));
-  }
-  textFont( createFont("Lucida Console", 20) );
+  //for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
+   // for(Enemy enemy: enemies){
+    //  enemy.drawShape();
+     
+   // }
+  //敵のリスト更新
+  //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
+   // for(Enemy enemy: enemies){
+    //    nextEnemies.add(enemy);
+   // }
+   // enemies = nextEnemies;
+    //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
+ // }
+  //textFont( createFont("Lucida Console", 20) );
 }
 
 // 毎フレームの進行と描画
@@ -164,6 +195,28 @@ void draw(){
   background(0);
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  
+  if(c.available() > 0) {
+    input = c.readString();
+    input = input.substring(0, input.indexOf("\n")); // Only up to the newline
+    data = int(split(input, ' ')); 
+    // Split values into an array
+    //generate obstacle
+    if(data[0] ==2){
+      println(data[0],data[1],data[2],data[3],data[4]);
+     enemies.add(new Enemy(data[2],data[3],0,data[4],data[1]));
+    } 
+    // delete obstacle
+    if(data[0] ==4){
+      println(data[0],data[1]);
+      for(Enemy enemy: enemies){
+        if(enemy.index ==  data[1]){
+           enemy.isDead = true;
+        }
+    } 
+    }
+    // Draw line using received coords
+  }
   //stop
   // 宇宙背景、塵
   setLights();
@@ -175,7 +228,12 @@ void draw(){
     Fighter chara = (Fighter) fighterList.get(i);
     chara.draw();
   }
-
+  for(int i=0;i<enemies.size();i++) {
+    Enemy chara = (Enemy) enemies.get(i);
+    if(chara.isDead == false){
+    chara.draw();
+    }
+  }
   // エフェクト
   noLights();
   for (int i=0;i<effectList.size();i++) {
@@ -232,53 +290,26 @@ void draw(){
   textMode(SCREEN); textSize(20); textAlign(CENTER, TOP);
   if(player.life>30) fill(0, 255, 0, 128);
   else fill(255, 0, 0, 128);
-  if(player.life>0) {
-    int enemyNum = fighterList.size()-1;
-    if(enemyNum==0) {
-      fill(255, 128);
-      textSize(40);
-      text("MISSION CLEAR", width/2, height/2 - 40);
-      if(clearMillis==0) clearMillis = millis();
-      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
-    } else {
-      text("" + enemyNum + " enemy" + (enemyNum>1 ? "s " : "" ), width/2, 30);
-      textAlign(RIGHT, CENTER);
-      text("life " + nf(player.life, 1, 0), width/3, height-30);
-      rectMode(CORNER);
-      noStroke();
-      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
-    }
-  } else text("GAME OVER", width/2, height/2);
-
+  //gameover
   input();
   cameraShake *= 0.95;
 }
 
-
-float theta=0;
 // 毎フレームの入力
 void input(){
-    ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-  
-    //individual JOINTS
-    for (int i = 0; i < skeletonArray.size(); i++)
-    {
-      KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-      if (skeleton.isTracked()) 
-      {
-        KJoint[] joints = skeleton.getJoints();
-        if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) 
-        {
-         float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
-         float InputLeft=constrain(map(LeftDiff,50,500,0,1),0,1);//50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
-         float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
-         float InputRight=constrain(map(RightDiff,50,500,0,1),0,1); 
-         player.roll(0.0f,-(InputLeft-InputRight), 0.0f);
-         theta += -(InputLeft-InputRight);
-        }
-      }
-    }
+  if(keyPressed && key=='1') {
+  if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) {
+    float rotYLevel = map(mouseX, 0, width, -1, 1);
+    float rotXLevel = map(mouseY, 0, height, -1, 1);
+    player.roll(rotXLevel * abs(rotXLevel) * 3.0, -rotYLevel * abs(rotYLevel) * 3.0, 0.0f);
+  }
+  }
+  if(player.life>0) {
+    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
+    else player.vel.mult(0.98);
+  }
 }
+
 
 // マウスボタンを押した瞬間
 void mousePressed() {
@@ -299,8 +330,7 @@ void setPlayerCamera() {
   player.updateMatrix();
   float sl = cameraShake * 0.01;
   PVector sp = new PVector(random_pm(sl), random_pm(sl), random_pm(sl));
-  camera(player.pos.x-20*sin(radians(theta+180)), player.pos.y+10, player.pos.z-20*cos(radians(theta+180)),     // 位置
-  //↑最初-z軸方向を向いているので
+  camera(player.pos.x, player.pos.y, player.pos.z,     // 位置
          player.pos.x-player.matrix.m02+sp.x, player.pos.y-player.matrix.m12+sp.y, player.pos.z-player.matrix.m22+sp.z, // 注視点
          player.matrix.m01, player.matrix.m11, player.matrix.m21); // アップベクトル
 }
