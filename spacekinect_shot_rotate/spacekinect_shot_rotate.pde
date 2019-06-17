@@ -295,21 +295,31 @@ void draw(){
   cameraShake *= 0.95;
 }
 
+
+float theta=0;
 // 毎フレームの入力
 void input(){
-  if(keyPressed && key=='1') {
-  if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) {
-    float rotYLevel = map(mouseX, 0, width, -1, 1);
-    float rotXLevel = map(mouseY, 0, height, -1, 1);
-    player.roll(rotXLevel * abs(rotXLevel) * 3.0, -rotYLevel * abs(rotYLevel) * 3.0, 0.0f);
-  }
-  }
-  if(player.life>0) {
-    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
-    else player.vel.mult(0.98);
-  }
+    ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+  
+    //individual JOINTS
+    for (int i = 0; i < skeletonArray.size(); i++)
+    {
+      KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+      if (skeleton.isTracked()) 
+      {
+        KJoint[] joints = skeleton.getJoints();
+        if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) 
+        {
+         float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
+         float InputLeft=constrain(map(LeftDiff,50,500,0,1),0,1);//50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
+         float InputRight=constrain(map(RightDiff,50,500,0,1),0,1); 
+         player.roll(0.0f,-(InputLeft-InputRight), 0.0f);
+         theta += -(InputLeft-InputRight);
+        }
+      }
+    }
 }
-
 
 // マウスボタンを押した瞬間
 void mousePressed() {
@@ -330,10 +340,12 @@ void setPlayerCamera() {
   player.updateMatrix();
   float sl = cameraShake * 0.01;
   PVector sp = new PVector(random_pm(sl), random_pm(sl), random_pm(sl));
-  camera(player.pos.x, player.pos.y, player.pos.z,     // 位置
+  camera(player.pos.x-20*sin(radians(theta+180)), player.pos.y+10, player.pos.z-20*cos(radians(theta+180)),     // 位置
+  //↑最初-z軸方向を向いているので
          player.pos.x-player.matrix.m02+sp.x, player.pos.y-player.matrix.m12+sp.y, player.pos.z-player.matrix.m22+sp.z, // 注視点
          player.matrix.m01, player.matrix.m11, player.matrix.m21); // アップベクトル
 }
+
 
 // ライト設定
 void setLights() {
