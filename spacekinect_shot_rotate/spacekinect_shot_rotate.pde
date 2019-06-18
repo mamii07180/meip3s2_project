@@ -229,7 +229,7 @@ void draw(){
     // Draw line using received coords
   }
   int x_send=int(player.pos.x);
-  int y_send=int(player.pos.y);
+  int y_send=int(-player.pos.z);
   s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
   //stop
   // 宇宙背景、塵
