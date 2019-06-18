@@ -47,7 +47,6 @@ void draw()
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, " ")); // Split values into an array
       // Draw line using received coords
-        hp=hp-100;
       if(data[0]==2){ //障害物生成時に受信
         number = data[1];
         ene_x = data[2];
