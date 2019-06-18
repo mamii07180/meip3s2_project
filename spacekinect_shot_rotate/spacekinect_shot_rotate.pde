@@ -331,6 +331,7 @@ void input(){
            
          }
       }
+      else text("No Input", 0.9*width, 0.9*height);
     }
     
 
@@ -381,13 +382,15 @@ float random_pm(float range) {
 }
 
 // 宇宙背景、塵の描画
-void drawStars() {
+void drawStars() 
+{
   pushMatrix();
   translate(player.pos.x, player.pos.y, player.pos.z);
   int seed = int(random(1000)); randomSeed(0);
   float range = 500.0;
   PVector starPos = new PVector();
-  for(int i=0; i<250; i++) {
+  for(int i=0; i<250; i++) 
+  {
     // 遠くの星々
     strokeWeight(int(random(1,3))); stroke(random(128,255));
     starPos.set(random_pm(range*100), random_pm(range*100), random_pm(range*100));
@@ -400,13 +403,13 @@ void drawStars() {
     starPos.z = modulo(-player.pos.z + starPos.z, range) - range * 0.5;
     line(starPos.x, starPos.y, starPos.z, starPos.x-player.vel.x*(range*0.001), starPos.y-player.vel.y*(range*0.001), starPos.z-player.vel.z*(range*0.001));
     //速度に合わせて加速
+  }
   randomSeed(seed);
 
   // 惑星
-  //noStroke();
-  //fill(0, 0, 255);
-  //translate(-20000,0,-30000);
-  //sphereDetail(30); sphere(20000);
-  //popMatrix();
-}
+  noStroke();
+  fill(0, 0, 255);
+  translate(-20000,0,-30000);
+  sphereDetail(30); sphere(20000);
+  popMatrix();
 }
