@@ -38,7 +38,7 @@ int data[];
 
 void setup(){
   s = new Server(this, 12345); // Start a simple server on a port
-  client = new Client(this, "157.82.202.205", 10000);
+//  client = new Client(this, "157.82.202.205", 10000);
   
   
   size(2560,1280);
@@ -328,12 +328,12 @@ class Myself{ //-------------------------ロケット
       // Draw line using received coords
       if(data[0]==0){
         stroke(0);
-        rocketX = data[1];
-        rocketY = data[2];
+        rocketX = data[1]+w2;
+        rocketY = -data[2]+height;
         loc.x=rocketX;
         loc.y=rocketY;
       }else if(data[0]==1){
-        angle = -data[1]*PI/2;
+        angle = radians(data[1]);
 //        if( coolingTime >= 10){
           myBullets.add(new Bullet());
  //         coolingTime = 0;
