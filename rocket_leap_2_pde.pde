@@ -52,7 +52,14 @@ void setup(){
   eneBullets = new ArrayList<Bullet>(); 
   for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
     ene_number = ene_number+1;
-    enemies.add(new Enemy(0,0,random(25)*2,ene_number)); //0,0なら適当に半径生成される(classに記載)
+    float ene_x, ene_y, ene_r;
+    while(true){
+      ene_x = random(width);
+      ene_y = random(height);
+      ene_r = random(25)*2;
+      if(abs(w2 - ene_x) > 40 + ene_r && abs(height - 20 - 10 - ene_y) > 40 + ene_r) break;      
+    }
+    enemies.add(new Enemy(ene_x,ene_y,ene_r,ene_number)); //0,0なら適当に半径生成される(classに記載)
   }
   //敵のリスト更新
     ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -210,12 +217,26 @@ void drawFingerTip(float a,float b,float d,float e) {
   x=fx+ w2; //左上が原点
   y=fy+ h2;
   if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){
-    if(fx<= -w2) x=0;
-    if(fx>= w2) x=width;
-    if(fy<= -h2) y=0;
-    if(fy>= h2) y=height;  
+    float angle = 0;
+    if(fx<= -w2) {
+      x=0;
+      angle = PI;
+    }else if(fx>= w2) {
+      x=width;
+    }
+    if(fy<= -h2) {
+      y=0;
+      angle = PI/2;
+    }else if(fy>= h2) {
+      y=height;
+      angle = 3*PI/2;
+    }
     stroke(255);
-    drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
+    pushMatrix();
+    translate(x, y);//円の中心に座標を合わせます
+    rotate(angle);
+    drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
+    popMatrix();
   }else {
     float dis = dist(myself.loc.x, myself.loc.y, x, y);
     if ( dis<=100 ){ //ロケットとカーソルの位置が近すぎたら
@@ -274,7 +295,12 @@ class Myself{ //-------------------------ロケット
       stroke(255,0, 0);
     }
     ellipse(loc.x, loc.y, size, size);
-    fill(0,255,0);
+    noFill();
+    stroke(255,255,255,100);
+    strokeWeight(15);
+    ellipse(loc.x, loc.y, size/2, size/2);
+    stroke(255);
+    strokeWeight(3);
     ellipse(loc.x, loc.y, size/2, size/2);
 //    pushMatrix();
 //    translate(loc.x, loc.y);//円の中心に座標を合わせます
@@ -303,10 +329,10 @@ class Myself{ //-------------------------ロケット
         loc.y=rocketY;
       }else if(data[0]==1){
         angle = -data[1]*PI/2;
-        if( coolingTime >= 10){
+//        if( coolingTime >= 10){
           myBullets.add(new Bullet());
-          coolingTime = 0;
-        }
+ //         coolingTime = 0;
+ //       }
       }
     }
 
@@ -319,7 +345,7 @@ class Myself{ //-------------------------ロケット
    // loc.x += dmx;
 //    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
    // loc.y += dmy; 
-    coolingTime++;
+//    coolingTime++;
 /*
     if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
       myBullets.add(new Bullet());
