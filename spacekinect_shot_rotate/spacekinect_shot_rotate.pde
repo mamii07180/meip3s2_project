@@ -116,13 +116,17 @@ class Bullet extends Chara  {
 
 // エフェクトクラス
 class Effect extends Chara  {
-  Effect(float _x, float _y, float _z, float _radius) { super(_x, _y, _z, _radius, EFFECT); }
+  PVector loc;
+  Effect(float _x, float _y, float _z, float _radius) {
+    super(_x, _y, _z, _radius, EFFECT); 
+    loc = new PVector(_x,_z);
+}
   void drawShape() {
     damage(2);
     radius *= 1.04;
     fill(255, 64, 32, map(life, 0, 100, 0, 128));
     pushMatrix();
-    translate(pos.x,pos.z);
+    translate(loc.x,loc.z);
     sphere(radius);
     popMatrix();
   }
@@ -141,10 +145,10 @@ class Enemy extends Chara{ //-------------------------------敵
     super(x, y, z, dis, ENEMY);
     size = dis;
     index = a;
-    if (x==0&&y==0){
+    if (x==0&&z==0){
       loc = new PVector(random(-2000,2000), random(-2000,2000));
     } else {
-      loc = new PVector(x,y);
+      loc = new PVector(x,z);
     }
     coolingTime = int(random(60));
     isDead = false;
@@ -153,7 +157,7 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(pos.x,pos.z);
+    translate(loc.x,loc.z);
     sphere(size);
     popMatrix();
   }
@@ -206,7 +210,7 @@ void draw(){
     //generate obstacle
     if(data[0] ==2){
       println(data[0],data[1],data[2],data[3],data[4]);
-     enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+     enemies.add(new Enemy(data[2],-20,data[3],data[4],data[1]));
     } 
     // delete obstacle
     if(data[0] ==4){
