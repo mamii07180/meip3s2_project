@@ -161,9 +161,11 @@ class Enemy extends Chara{ //-------------------------------敵
 
 //stop
 
+int width=640;
+int height=480;
 // 初期化
 void setup() {
-  size(640, 480, P3D);
+  size(640, 480, P3D);//widthとかつかうと怒られた
   //change
   c = new Client(this,"127.0.0.1",12345);
   kinect = new KinectPV2(this);
@@ -188,6 +190,7 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
+  player.accel(2);//最初にスピードを与える
 }
 
 // 毎フレームの進行と描画
@@ -308,17 +311,31 @@ void input(){
       if (skeleton.isTracked()) 
       {
         KJoint[] joints = skeleton.getJoints();
-        if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) 
-        {
          float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
-         float InputLeft=constrain(map(LeftDiff,50,500,0,1),0,1);//50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
          float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
-         float InputRight=constrain(map(RightDiff,50,500,0,1),0,1); 
-         player.roll(0.0f,-(InputLeft-InputRight), 0.0f);
-         theta += -(InputLeft-InputRight);
-        }
+         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         if(LeftDiff<0) InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
+         if(RightDiff<0) InputRight=-InputRight;
+         if(InputLeft*InputRight<0)//左右の上下が反対なら回転
+         {
+           float Input=InputRight-InputLeft;
+           player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
+           theta += Input;
+           line(0.9*width,0.9*width+10*cos(radians(30*Input)),0.9*height,0.9*height+10*sin(radians(30*Input)));
+         }
+         //腕を両方あげるとスピードアップ(減速は保留）
+         if(InputLeft>0 && InputRight>0)
+         {
+           player.accel(0.1);
+           
+         }
       }
     }
+    
+
+    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
+    else player.vel.mult(0.98);
 }
 
 // マウスボタンを押した瞬間
@@ -382,13 +399,14 @@ void drawStars() {
     starPos.y = modulo(-player.pos.y + starPos.y, range) - range * 0.5;
     starPos.z = modulo(-player.pos.z + starPos.z, range) - range * 0.5;
     line(starPos.x, starPos.y, starPos.z, starPos.x-player.vel.x*(range*0.001), starPos.y-player.vel.y*(range*0.001), starPos.z-player.vel.z*(range*0.001));
-  }
+    //速度に合わせて加速
   randomSeed(seed);
 
   // 惑星
-  noStroke();
-  fill(0, 0, 255);
-  translate(-20000,0,-30000);
-  sphereDetail(30); sphere(20000);
-  popMatrix();
+  //noStroke();
+  //fill(0, 0, 255);
+  //translate(-20000,0,-30000);
+  //sphereDetail(30); sphere(20000);
+  //popMatrix();
+}
 }
