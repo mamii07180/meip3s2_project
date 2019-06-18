@@ -268,7 +268,8 @@ void draw(){
      if(j ==  KinectPV2.HandState_Open & bu > 60) {
            println("shoot");
            player.shoot(30, 1);
-         //  s.write(5 + " " + direction + " " +  "\n");
+           int theta_send=int(theta);//intじゃないとエラー？
+           s.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
            bu = 0;
      } 
      
