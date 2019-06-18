@@ -18,7 +18,7 @@ int angle;
 int number=0,d_number=0;
 int hit = 0;
 int hp=1000;
-int n_ene_x, n_ene_y, ene_r, d_ene_x, d_ene_y;
+int ene_x, ene_y, ene_r, d_ene_x, d_ene_y;
 ;
 
 void setup() 
@@ -47,21 +47,22 @@ void draw()
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, " ")); // Split values into an array
       // Draw line using received coords
+        hp=hp-100;
       if(data[0]==2){ //障害物生成時に受信
         number = data[1];
-        n_ene_x = data[2];
+        ene_x = data[2];
       }else if(data[0]==5){
-        n_ene_y = data[1];
+        ene_y = data[1];
         ene_r = data[2];
-        stroke(0);
-        text(n_ene_y, width/2, height/2+200);
       }else if(data[0]==3){
-        hp = data[1];
+        hp = 1000;
+        hit = 0;
       }else if(data[0]==4){ //障害物死滅時に受信
         d_number = data[1]; 
 //        d_ene_x = data[2];
 //        d_ene_y = data[3];
         hit = hit+1;
+        if(data[2]==1) hp = hp-100;
       }
     }
       //描画
@@ -73,10 +74,14 @@ void draw()
         fill(0,255,0);
         text("HIT: "+hit, width/2, height/2+50);
         textSize(26);
-        stroke(0);
+        fill(0);
+        text("NEW enemy No. "+number + " X:" + ene_x + " Y:" + ene_y + " R:"+ene_r, width/2, height/2+300);
+        stroke(0,255,0);
+       textSize(26);
+        fill(0);
         text("DEAD enemy No. "+d_number, width/2, height/2+100);
         stroke(0,255,0);
-/*
+ /*
   // Receive data from server
   if (c.available() > 0) {
     input = c.readString();
