@@ -6,6 +6,7 @@ import KinectPV2.KJoint;
 import KinectPV2.*;
 KinectPV2 kinect;
 int bu = 0;
+Server s;
 Client c;
 String input;
 int j = 15;
@@ -166,7 +167,8 @@ class Enemy extends Chara{ //-------------------------------敵
 }
 
 //stop
-
+int width=640;
+int height=480;
 // 初期化
 void setup() {
   size(640, 480, P3D);
@@ -177,6 +179,7 @@ void setup() {
   kinect.enableColorImg(true);
   kinect.init();
   frameRate(60);
+  s = new Server(this, 10000);
   enemies = new ArrayList<Enemy>();
   //stop
   fighterList.add(player);
@@ -194,6 +197,7 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
+   player.accel(2);
 }
 
 // 毎フレームの進行と描画
@@ -202,16 +206,17 @@ void draw(){
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
-  if(c.available() > 0) {
+  while(c.available() > 0) {
     input = c.readString();
     input = input.substring(0, input.indexOf("\n")); // Only up to the newline
     data = int(split(input, ' ')); 
     // Split values into an array
     //generate obstacle
-    if(data[0] ==2){
-      println(data[0],data[1],data[2],data[3],data[4]);
-     enemies.add(new Enemy(data[2],-20,data[3],data[4],data[1]));
-    } 
+    if(data[0] == 2){
+       println(data[0],data[1],data[2],data[3],data[4]);
+       enemies.add(new Enemy(data[2],-70,data[3],data[4],data[1]));
+       
+    }
     // delete obstacle
     if(data[0] ==4){
       println(data[0],data[1]);
@@ -224,6 +229,9 @@ void draw(){
     }
     // Draw line using received coords
   }
+  int x_send=int(player.pos.x);
+  int y_send=int(-player.pos.z);
+  //c.write(0 + " " + x_send + " " + y_send + " " +  "\n"); 
   //stop
   // 宇宙背景、塵
   setLights();
@@ -262,6 +270,8 @@ void draw(){
      if(j ==  KinectPV2.HandState_Open & bu > 60) {
            println("shoot");
            player.shoot(30, 1);
+           int theta_send=int(theta);
+           //c.write(1 + " " + theta_send + " " +  "\n");
            bu = 0;
      } 
      
@@ -290,7 +300,7 @@ void draw(){
     }
     if(bullet.life<=0) bulletList.remove(i--); // 寿命で消滅
   }
-   
+  
   // 情報表示
   camera();
   noLights();
@@ -315,17 +325,29 @@ void input(){
       if (skeleton.isTracked()) 
       {
         KJoint[] joints = skeleton.getJoints();
-        if(mouseX>0 && mouseX<width && mouseY>0 && mouseY<height) 
-        {
+        
          float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
-         float InputLeft=constrain(map(LeftDiff,50,500,0,1),0,1);//50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
          float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
-         float InputRight=constrain(map(RightDiff,50,500,0,1),0,1); 
-         player.roll(0.0f,-(InputLeft-InputRight), 0.0f);
-         theta += -(InputLeft-InputRight);
-        }
+         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         if(LeftDiff<0) InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
+         if(RightDiff<0) InputRight=-InputRight;
+         if(InputLeft*InputRight<0)//左右の上下が反対なら回転
+         {
+           float Input=InputRight-InputLeft;
+           player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
+           theta += Input;
+           line(0.9*width,0.9*width+10*cos(radians(30*Input)),0.9*height,0.9*height+10*sin(radians(30*Input)));
+         }
+         //腕を両方あげるとスピードアップ(減速は保留）)
+         if(InputLeft>0 && InputRight>0)
+         {
+           player.accel(0.1);
+         }
       }
     }
+     if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04); 
+    else player.vel.mult(0.98);
 }
 
 // マウスボタンを押した瞬間
