@@ -169,11 +169,11 @@ class Enemy extends Chara{ //-------------------------------敵
 //stop
 int width=640;
 int height=480;
-// 初期化
+// 初期化//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   size(640, 480, P3D);
   //change
-  c = new Client(this,"127.0.0.1",12345);
+  c = new Client(this,"157.82.202.197",12345);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
@@ -200,7 +200,7 @@ void setup() {
    player.accel(2);
 }
 
-// 毎フレームの進行と描画
+// 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
   background(0);
   //change
@@ -230,7 +230,7 @@ void draw(){
   }
   int x_send=int(player.pos.x);
   int y_send=int(-player.pos.z);
-  s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
+  c.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
   //stop
   // 宇宙背景、塵
   setLights();
@@ -270,7 +270,7 @@ void draw(){
            println("shoot");
            player.shoot(30, 1);
            int theta_send=int(theta);//intじゃないとエラー？
-           s.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
+           c.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
            bu = 0;
      } 
      
@@ -309,11 +309,40 @@ void draw(){
   //gameover
   input();
   cameraShake *= 0.95;
+  
+  
+  //機体の傾き表現用
+  stroke(0,0,200);
+  ellipse(0.9*width,0.9*height,30,30);//青の外円
+  stroke(0,200,0);
+  drawDiamond(0.9*width,0.9*height,20,theta);
+  
 }
 
+//↑コンパスのひし形を書く用
+void drawDiamond(float x,float y,float r,float theta_d)
+{
+  float R;
+  pushMatrix();
+  translate(x,y);//x,yに移る
+  beginShape();
+  for(int i=0;i<4;i++)
+  {
+    if(i%2==0)
+    {
+      R=r/5;//真ん中の2点
+    }else
+    {
+      R=r;
+    }
+    vertex(R*cos(radians(90*i+theta_d)),R*sin(radians(90*i+theta_d)));//点を打つ
+  }
+  endShape(CLOSE);//閉じてね
+  popMatrix();
+}
 
 float theta=0;
-// 毎フレームの入力
+// 毎フレームの入力//////////////////////////////////////////////////////////////////////////////////
 void input(){
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
@@ -336,17 +365,15 @@ void input(){
            float Input=InputRight-InputLeft;
            player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
            theta += Input;
-           line(0.9*width,0.9*width+10*cos(radians(30*Input)),0.9*height,0.9*height+10*sin(radians(30*Input)));
          }
          //腕を両方あげるとスピードアップ(減速は保留）)
          if(InputLeft>0 && InputRight>0)
          {
-           player.accel(0.1);
+           player.accel(0.01);
          }
       }
     }
-     if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04); 
-    else player.vel.mult(0.98);
+
 }
 
 // マウスボタンを押した瞬間
