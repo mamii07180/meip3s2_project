@@ -11,7 +11,7 @@ Server s;
 String input;
 int j = 15;
 int data[];
-
+int shoot; //timing of shoot
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
@@ -81,6 +81,7 @@ class Fighter extends Chara  {
     if(radian>0) bullet.roll(random_pm(radian), random_pm(radian), random_pm(radian));  // 少し向きをランダムにばらけさせる
     bullet.accel(70);
     bulletList.add(bullet);
+    //発射時に今の角度を送る
     return bullet;
   }
 }
@@ -232,7 +233,15 @@ void draw(){
   }
   int x_send=int(player.pos.x);
   int y_send=int(-player.pos.z);
-  s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
+  if(shoot==1){
+  int theta_send=int(theta);
+  s.write(1 + " " + theta_send + " " +  "\n");
+  delay(10);
+  shoot = 0;
+  } else{
+  s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  
+  }
+  //0:serve (x,y)
   //stop
   // 宇宙背景、塵
   setLights();
@@ -271,8 +280,8 @@ void draw(){
      if(j ==  KinectPV2.HandState_Open & bu > 60) {
            println("shoot");
            player.shoot(30, 1);
-           int theta_send=int(theta);//intじゃないとエラー？
-           s.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
+           shoot = 1;
+           //intじゃないとエラー？
            bu = 0;
      } 
      
