@@ -10,7 +10,7 @@ import processing.net.*;
 */
 
 Controller leap = new Controller();         // leap という名前で Controller オブジェクトを宣言
-InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
+//InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
 int state1=0;
 float n,m;
@@ -34,10 +34,12 @@ int ene_number=0;
 Server s;
 Client client;
 String input;
-int[] data = new int[3];
+int data[];
 
 void setup(){
   s = new Server(this, 12345); // Start a simple server on a port
+//  client = new Client(this, "157.82.202.205", 10000);
+  
   
   size(2560,1280);
 //  fullScreen(P3D);
@@ -52,7 +54,14 @@ void setup(){
   eneBullets = new ArrayList<Bullet>(); 
   for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
     ene_number = ene_number+1;
-    enemies.add(new Enemy(0,0,random(25)*2,ene_number)); //0,0なら適当に半径生成される(classに記載)
+    float ene_x, ene_y, ene_r;
+    while(true){
+      ene_x = random(width);
+      ene_y = random(height);
+      ene_r = random(25)*2;
+      if(abs(w2 - ene_x) > 40 + ene_r && abs(height - 20 - 10 - ene_y) > 40 + ene_r) break;      
+    }
+    enemies.add(new Enemy(ene_x,ene_y,ene_r,ene_number)); //0,0なら適当に半径生成される(classに記載)
   }
   //敵のリスト更新
     ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -77,15 +86,13 @@ void draw(){
     if(w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) {
       fill(255,0,0);
     } else {
- 
       fill(255);
     }
     rect(w2+90, h2+50, 180, 60);
     textSize(50);
     fill(0);
     text("REPLAY", w2, h2+70);
-    if( mousePressed == true && mouseX<=w2+180
-    &&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
+    if( mousePressed == true && mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20){
       hp = 1000;
       hit = 0;
 //      s.write(2+" "+hit + "\n");
@@ -110,10 +117,10 @@ void draw(){
   //    }
       }
     }
-  } else { //--------------------ゲーム
-     // Frame frame = leap.frame();               // Frame オブジェクトを宣言し、leap のフレームを入れる
-      //HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
-//      iBox = frame.interactionBox();            // InteractionBox を初期化
+  } else { //--------------------ゲーム  
+    Frame frame = leap.frame();
+    HandList hands = frame.hands();
+//  iBox = frame.interactionBox();
 
     background(0);
     stroke(255);
@@ -130,94 +137,112 @@ void draw(){
     bullet.display();
   }*/
 
-  myself.update();
-  //敵のリスト更新
-  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
-  for(Enemy enemy: enemies){
-    enemy.update();
-    if(!enemy.isDead){
-      nextEnemies.add(enemy);
-    } else {
-//      s.write(4+" "+ene_number +"\n"); //死亡した個体番号を知らせる
+    myself.update();
+    //敵のリスト更新
+    ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
+    for(Enemy enemy: enemies){
+      enemy.update();
+      if(!enemy.isDead){
+        nextEnemies.add(enemy);
+      } else {
+//        s.write(4+" "+ene_number +"\n"); //死亡した個体番号を知らせる
+      }
     }
-  }
-  enemies = nextEnemies;
-  ene_number++;
-  //銃リスト更新
-  ArrayList<Bullet> nextMyBullets = new ArrayList<Bullet>();
-  for(Bullet bullet: myBullets){
-    bullet.update();
-    if(!bullet.isDead){
-      nextMyBullets.add(bullet);
+    enemies = nextEnemies;
+    ene_number++;
+    //銃リスト更新
+    ArrayList<Bullet> nextMyBullets = new ArrayList<Bullet>();
+    for(Bullet bullet: myBullets){
+      bullet.update();
+      if(!bullet.isDead){
+        nextMyBullets.add(bullet);
+      }
     }
-  }
-  myBullets = nextMyBullets;
-/* //敵の銃リスト更新 
-  ArrayList<Bullet> nextEneBullets = new ArrayList<Bullet>();
-  for(Bullet bullet: eneBullets){
-    bullet.update();
-    if(!bullet.isDead){
-      nextEneBullets.add(bullet);
+    myBullets = nextMyBullets;
+/*
+//敵の銃リスト更新 
+    ArrayList<Bullet> nextEneBullets = new ArrayList<Bullet>();
+    for(Bullet bullet: eneBullets){
+      bullet.update();
+      if(!bullet.isDead){
+        nextEneBullets.add(bullet);
+      }
     }
-  }
-  eneBullets = nextEneBullets;*/
-/*  if(mousePressed && mouseButton==RIGHT && state == false &&
-  dist(myself.loc.x, myself.loc.y, mouseX, mouseY)>=100) {
-    xx = mouseX;
-    yy = mouseY;
-    state = true;*/
-//    enemies.add(new Enemy(mouseX, mouseY, d)); //右クリックで敵追加
-  }
+    eneBullets = nextEneBullets;
+    */
+    /*
+    if(mousePressed && mouseButton==RIGHT && state == false && dist(myself.loc.x, myself.loc.y, mouseX, mouseY)>=100) {
+      xx = mouseX;
+      yy = mouseY;
+      state = true;
+      enemies.add(new Enemy(mouseX, mouseY, d)); //右クリックで敵追加
+    }
+*/  
   
+    //カーソルの表示  
+    Hand[] hand = new Hand[2];
+    float[] x= new float[5];
+    if(hands.count()>0){
+      for(int i = 0; i < 2; i++) {
+        text("OK",0,height-200);
+        hand[i]=hands.get(i);
+      }
+      x = fingergap1(hand[0],hand[1]);
+      drawFingerTip(x[0],x[2],x[3],x[4]);
+      text(x[0], 0, height-100); //-250~250がよさそう
+      text(x[3], 0, height-50); //-250~250がよさそう
+    }
+    
   
-  //カーソルの表示
-  
-  //HPと撃墜数の表示
-  fill(255);
-  textSize(26);
-  noFill();
-  stroke(255);
-  strokeWeight(1);
-  rect(62, 12,106, 18);
-  fill(0,255,0);
-  text("HP", 10, 35);
+    //HPと撃墜数の表示
+    fill(255);
+    textSize(26);
+    noFill();
+    stroke(255);
+    strokeWeight(1);
+    rect(62, 12,106, 18);
+    fill(0,255,0);
+    text("HP", 10, 35);
 //  text(hp, 60, 35);
-  rectMode(CORNER);
-  noStroke();
-  rect(65, 15, hp/10, 12);
-  fill(255);
-  text("HIT", 10, 60);
-  text(hit, 60, 60);
-  
-  Frame frame = leap.frame();
-  HandList hands = frame.hands();
-//  iBox = frame.interactionBox();
-  Hand[] hand = new Hand[2];
-  float[] x= new float[4];
-  for(int i = 0; i<2; i++)  {
-    hand[i]=hands.get(i);
+    rectMode(CORNER);
+    noStroke();
+    rect(65, 15, hp/10, 12);
+    fill(255);
+    text("HIT", 10, 60);
+    text(hit, 60, 60);
   }
-  x = fingergap1(hand[0],hand[1]);
-  drawFingerTip(x[0],x[2],x[3],x[4]);
-  text(x[0], 0, height-100); //-250~250がよさそう
-  text(x[3], 0, height-50); //-250~250がよさそう
 }
 
 void drawFingerTip(float a,float b,float d,float e) {
-  float fx,fy, x, y; //指の位置
+  float fx,fy, xx, yy; //指の位置
   fx = resizeX*a;
   fy = resizeY*b;
-  x=fx+ w2; //左上が原点
-  y=fy+ h2;
+  xx=fx+ w2; //左上が原点
+  yy=fy+ h2;
   if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){
-    if(fx<= -w2) x=0;
-    if(fx>= w2) x=width;
-    if(fy<= -h2) y=0;
-    if(fy>= h2) y=height;  
+    float angle = 0;
+    if(fx<= -w2) {
+      xx=0;
+      angle = PI;
+    }else if(fx>= w2) {
+      xx=width;
+    }
+    if(fy<= -h2) {
+      yy=0;
+      angle = PI/2;
+    }else if(fy>= h2) {
+      yy=height;
+      angle = 3*PI/2;
+    }
     stroke(255);
-    drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
+//    pushMatrix();
+//    translate(x, y);//円の中心に座標を合わせます
+//    rotate(angle);
+//    drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
+//    popMatrix();
+    drawTriangle(xx,yy,50);
   }else {
-    float dis = dist(myself.loc.x, myself.loc.y, x, y);
+    float dis = dist(myself.loc.x, myself.loc.y, xx, yy);
     if ( dis<=100 ){ //ロケットとカーソルの位置が近すぎたら
       noFill();
       strokeWeight(5);
@@ -236,8 +261,8 @@ void drawFingerTip(float a,float b,float d,float e) {
     }
     stroke(255-aaa,255,aaa);
     strokeWeight(5);
-    line(x, y+16, x, y-16);    //撃つ方向
-    line(x-16, y, x+16, y);    //撃つ方向      
+    line(xx, yy+16, xx, yy-16);    //撃つ方向
+    line(xx-16, yy, xx+16, yy);    //撃つ方向      
   }
 /*
   fill(0,255,0);
@@ -245,7 +270,7 @@ void drawFingerTip(float a,float b,float d,float e) {
   text(fx, 0, height-100); //-250~250がよさそう
   textSize(56);
   text(fy, 0, height-50); //-250~250がよさそう
-  */
+*/  
 }
 
 class Myself{ //-------------------------ロケット
@@ -274,7 +299,12 @@ class Myself{ //-------------------------ロケット
       stroke(255,0, 0);
     }
     ellipse(loc.x, loc.y, size, size);
-    fill(0,255,0);
+    noFill();
+    stroke(255,255,255,100);
+    strokeWeight(15);
+    ellipse(loc.x, loc.y, size/2, size/2);
+    stroke(255);
+    strokeWeight(3);
     ellipse(loc.x, loc.y, size/2, size/2);
 //    pushMatrix();
 //    translate(loc.x, loc.y);//円の中心に座標を合わせます
@@ -291,22 +321,23 @@ class Myself{ //-------------------------ロケット
     // Receive data from client
     client = s.available();
     if (client != null) {
+      println("OK");
       input = client.readString();
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, ' ')); // Split values into an array
       // Draw line using received coords
       if(data[0]==0){
         stroke(0);
-        rocketX = data[1];
-        rocketY = data[2];
+        rocketX = data[1]+w2;
+        rocketY = -data[2]+height;
         loc.x=rocketX;
         loc.y=rocketY;
       }else if(data[0]==1){
-        angle = -data[1]*PI/2;
-        if( coolingTime >= 10){
+        angle = radians(data[1]);
+//        if( coolingTime >= 10){
           myBullets.add(new Bullet());
-          coolingTime = 0;
-        }
+ //         coolingTime = 0;
+ //       }
       }
     }
 
@@ -319,7 +350,7 @@ class Myself{ //-------------------------ロケット
    // loc.x += dmx;
 //    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
    // loc.y += dmy; 
-    coolingTime++;
+//    coolingTime++;
 /*
     if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
       myBullets.add(new Bullet());
@@ -414,7 +445,7 @@ class Enemy{ //-------------------------------敵
       loc = new PVector(x,y);
     }
 //    vel = 3;
-    coolingTime = int(random(60));
+//    coolingTime = int(random(60));
     isDead = false;
     s.write(2+" "+number+" "+(int)loc.x+"\n");  //個体番号、座標、半径を送信
     s.write(5+" "+(int)loc.y+" "+size+"\n");  //個体番号、座標、半径を送信
@@ -510,6 +541,7 @@ void mouseReleased()
 
 float[] fingergap1(Hand hand1,Hand hand2){
   float[] x=new float[5];
+  text("OK", w2,h2);
   FingerList [] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
   Vector[]  tipPos = new Vector[4];
