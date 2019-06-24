@@ -42,11 +42,16 @@ class Chara {
   void accel(float speed) {
     vel.x += matrix.m02 * -speed;  vel.y += matrix.m12 * -speed;  vel.z += matrix.m22 * -speed;
   }
+  /* 敵機にプレイヤの方を向かせrときに使っていた
   void lookAt(PVector vz) {
     PVector vx = vz.cross(new PVector(0,1,0)); vx.normalize();
     PVector vy = vz.cross(vx); vy.normalize();
-    matrix.set(vx.x, vy.x, vz.x, pos.x, vx.y, vy.y, vz.y, pos.y, vx.z, vy.z, vz.z, pos.z, 0, 0, 0, 1);
+    matrix.set(vx.x, vy.x, vz.x, pos.x, 
+               vx.y, vy.y, vz.y, pos.y, 
+               vx.z, vy.z, vz.z, pos.z,
+               0,    0,    0,    1);
   }
+  */
   void updateMatrix() {
     matrix.m03 = pos.x; matrix.m13 = pos.y; matrix.m23 = pos.z;
   }
