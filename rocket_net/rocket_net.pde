@@ -11,7 +11,8 @@
 
 import processing.net.*;
 
-Client c;
+Server s;
+Client client;
 String input;
 int data[];
 int angle;
@@ -27,7 +28,8 @@ void setup()
   stroke(0);
   frameRate(15); // Slow it down a little
   // Connect to the server's IP address and port
-  c = new Client(this, "127.0.0.1", 12345); // Replace with your server's IP and port
+//  c = new Client(this, "127.0.0.1", 12345); // Replace with your server's IP and port
+  s = new Server(this, 12345); // Start a simple server on a port
 }
 
 void draw() 
@@ -38,11 +40,12 @@ void draw()
     stroke(255);
     line(pmouseX, pmouseY, mouseX, mouseY);
     // Send mouse coords to other person
-    c.write(0+" "+mouseX + " " + mouseY + "\n");
+    s.write(0+" "+mouseX + " " + mouseY + "\n");
   }
   
       // Receive data from client
-    if (c.available() >0) {
+    Client c = s.available();
+    if (c != null) {
       input = c.readString();
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, ' ')); // Split values into an array
@@ -102,7 +105,7 @@ void keyPressed() {
   if( key == '4' ){
     angle = 0;
   }
-  c.write(1+" "+ angle + "\n");
+  s.write(1+" "+ angle + "\n");
   fill(255);
   textSize(26);
   text(angle, 10, 35);
