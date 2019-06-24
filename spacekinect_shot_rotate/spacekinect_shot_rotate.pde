@@ -6,8 +6,8 @@ import KinectPV2.KJoint;
 import KinectPV2.*;
 KinectPV2 kinect;
 int bu = 0;
-Server s;
 Client c;
+Server s;
 String input;
 int j = 15;
 int data[];
@@ -37,6 +37,7 @@ class Chara {
   }
   void roll(float rotX, float rotY, float rotZ) {
     matrix.rotateY(radians(rotY));  matrix.rotateX(radians(rotX));  matrix.rotateZ(radians(rotZ));
+    
   }
   void accel(float speed) {
     vel.x += matrix.m02 * -speed;  vel.y += matrix.m12 * -speed;  vel.z += matrix.m22 * -speed;
@@ -167,19 +168,19 @@ class Enemy extends Chara{ //-------------------------------敵
 }
 
 //stop
-int width=640;
-int height=480;
+int width=1120;
+int height=840;
 // 初期化//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  size(640, 480, P3D);
+  size(1120, 840, P3D);
   //change
-  c = new Client(this,"157.82.202.197",12345);
+  s = new Server(this,12345);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
   kinect.init();
   frameRate(60);
-  s = new Server(this, 10000);
+  //s = new Client(this, 10000);
   enemies = new ArrayList<Enemy>();
   //stop
   fighterList.add(player);
@@ -197,7 +198,7 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
-   player.accel(2);
+   //player.accel(0.5);
 }
 
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +207,8 @@ void draw(){
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
-  if(c.available() > 0) {
+  c=s.available();
+  if(c != null) {
     input = c.readString();
     input = input.substring(0, input.indexOf("\n")); // Only up to the newline
     data = int(split(input, ' ')); 
@@ -230,7 +232,7 @@ void draw(){
   }
   int x_send=int(player.pos.x);
   int y_send=int(-player.pos.z);
-  c.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
+  s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  //0:serve (x,y)
   //stop
   // 宇宙背景、塵
   setLights();
@@ -270,7 +272,7 @@ void draw(){
            println("shoot");
            player.shoot(30, 1);
            int theta_send=int(theta);//intじゃないとエラー？
-           c.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
+           s.write(1 + " " + theta_send + " " +  "\n");//発射時に今の角度を送る
            bu = 0;
      } 
      
@@ -315,7 +317,7 @@ void draw(){
   stroke(0,0,200);
   ellipse(0.9*width,0.9*height,30,30);//青の外円
   stroke(0,200,0);
-  drawDiamond(0.9*width,0.9*height,20,theta);
+  drawDiamond(0.9*width,0.9*height,60,theta);
   
 }
 
@@ -387,6 +389,7 @@ void addExplosionEffect(Chara chara) {
     effectList.add(effect);
 }
 
+/*
 // プレイヤー視点のカメラ
 void setPlayerCamera() {
   player.updateMatrix();
@@ -394,6 +397,16 @@ void setPlayerCamera() {
   PVector sp = new PVector(random_pm(sl), random_pm(sl), random_pm(sl));
   camera(player.pos.x-20*sin(radians(theta+180)), player.pos.y+10, player.pos.z-20*cos(radians(theta+180)),     // 位置
   //↑最初-z軸方向を向いているので
+         player.pos.x-player.matrix.m02+sp.x, player.pos.y-player.matrix.m12+sp.y, player.pos.z-player.matrix.m22+sp.z, // 注視点
+         player.matrix.m01, player.matrix.m11, player.matrix.m21); // アップベクトル
+}
+*/
+// プレイヤー視点のカメラ
+void setPlayerCamera() {
+  player.updateMatrix();
+  float sl = cameraShake * 0.01;
+  PVector sp = new PVector(random_pm(sl), random_pm(sl), random_pm(sl));
+  camera(player.pos.x, player.pos.y, player.pos.z,     // 位置
          player.pos.x-player.matrix.m02+sp.x, player.pos.y-player.matrix.m12+sp.y, player.pos.z-player.matrix.m22+sp.z, // 注視点
          player.matrix.m01, player.matrix.m11, player.matrix.m21); // アップベクトル
 }
