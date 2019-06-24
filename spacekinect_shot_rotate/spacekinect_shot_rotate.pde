@@ -12,6 +12,7 @@ String input;
 int j = 15;
 int data[];
 int shoot; //timing of shoot
+float sp;
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
@@ -37,10 +38,13 @@ class Chara {
   }
   void roll(float rotX, float rotY, float rotZ) {
     matrix.rotateY(radians(rotY));  matrix.rotateX(radians(rotX));  matrix.rotateZ(radians(rotZ));
-    
+    PVector rot = new PVector(vel.z*radians(rotY),0,-vel.x*radians(rotY));
+    vel.add(rot);
   }
   void accel(float speed) {
     vel.x += matrix.m02 * -speed;  vel.y += matrix.m12 * -speed;  vel.z += matrix.m22 * -speed;
+    //float sp = player.vel.dist(new PVector(0,0,0));
+    // vel.x = sp*cos(theta); vel.z = sp*sin(theta); 
   }
   void lookAt(PVector vz) {
     PVector vx = vz.cross(new PVector(0,1,0)); vx.normalize();
@@ -199,11 +203,13 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
-   //player.accel(0.5);
+  // player.accel(0.5);
 }
 
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
+  //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
+  sp = player.vel.dist(new PVector(0,0,0));
   background(0);
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
@@ -217,7 +223,7 @@ void draw(){
     //generate obstacle
     if(data[0] ==2){
       println(data[0],data[1],data[2],data[3],data[4]);
-     enemies.add(new Enemy(data[2],-70,data[3],data[4],data[1]));
+     enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
     } 
     // delete obstacle
     if(data[0] ==4){
@@ -375,15 +381,22 @@ void input(){
          {
            float Input=InputRight-InputLeft;
            player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
-           theta += Input;
+           theta -= Input;
          }
          //腕を両方あげるとスピードアップ(減速は保留）)
-         if(InputLeft>0 && InputRight>0)
-         {
-           player.accel(0.01);
+       
+        
+         if(InputLeft>0 && InputRight>0 && sp < 2)
+        {
+          player.accel(0.01);
+        } else if(sp > 0.5){
+         player.vel.mult(0.99);
          }
+         
+         
       }
     }
+    println(sp);
 
 }
 
