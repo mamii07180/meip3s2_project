@@ -26,4 +26,3 @@ public class Const {
     96, 120, 240
   };
 }
-

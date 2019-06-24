@@ -13,7 +13,11 @@ Controller leap = new Controller();         // leap という名前で Controlle
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
 int state1=0;
+int state2=0;
+int f=0;
 float n,m;
+float timestart=0.0;
+float timefinish=0.0;
 
 Myself myself;
 ArrayList<Enemy> enemies;
@@ -34,7 +38,8 @@ int ene_number=0;
 Server s;
 Client client;
 String input;
-int data[];
+
+int[] data = new int[3];
 
 //エフェクト
 ImgList imgList;
@@ -42,10 +47,9 @@ StukaEffect stukaEffect;
 
 void setup(){
 //  s = new Server(this, 12345); // Start a simple server on a port
-  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
-//  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+//  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
+  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
 //  client = new Client(this, "157.82.202.205", 10000);
-  
   
   size(2560,1280);
 //  fullScreen(P3D);
@@ -127,10 +131,10 @@ void draw(){
   //    }
       }
     }
-  } else { //--------------------ゲーム  
-    Frame frame = leap.frame();
-    HandList hands = frame.hands();
-//  iBox = frame.interactionBox();
+  } else { //--------------------ゲーム
+     // Frame frame = leap.frame();               // Frame オブジェクトを宣言し、leap のフレームを入れる
+      //HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
+//      iBox = frame.interactionBox();            // InteractionBox を初期化
 
     background(0);
     stroke(255);
@@ -188,21 +192,6 @@ void draw(){
     }
 */  
   
-    //カーソルの表示  
-    Hand[] hand = new Hand[2];
-    float[] x= new float[5];
-    if(hands.count()>0){
-      for(int i = 0; i < 2; i++) {
-        text("OK",0,height-200);
-        hand[i]=hands.get(i);
-      }
-      x = fingergap1(hand[0],hand[1]);
-      drawFingerTip(x[0],x[2],x[3],x[4]);
-      text(x[0], 0, height-100); //-250~250がよさそう
-      text(x[3], 0, height-50); //-250~250がよさそう
-    }
-    
-  
     //HPと撃墜数の表示
     fill(255);
     textSize(26);
@@ -221,59 +210,100 @@ void draw(){
     text(hit, 60, 60);
     stukaEffect.effectPlay();
   }
+
+  
+  Frame frame = leap.frame();
+  HandList hands = frame.hands();
+//  iBox = frame.interactionBox();
+  Hand[] hand = new Hand[2];
+  Vector[] palmPos = new Vector[2];
+  float[] x= new float[5];
+  for(int i = 0; i<2; i++)  {
+    hand[i]=hands.get(i);
+    palmPos[i]=hand[i].palmPosition();
+  }
+  if(palmPos[0].getX()>palmPos[1].getX()&&hands.count()==2){
+  f=1;
+  }
+  else{
+  f=0;
+  }
+  x = fingergap1(hand[0],hand[1]);
+/*  if(x[5]==0.0){
+    textSize(80);
+    fill(255);
+    text("この世は無である..",600,600);
+  }else if(x[5]==1.0){
+    textSize(80);
+    fill(255);
+    text("光..",600,600);
+  }else if(x[5]==2.0){*/
+  drawFingerTip(x[0],x[2],x[3],x[4],f);
+  //}
+  
 }
 
-void drawFingerTip(float a,float b,float d,float e) {
-  float fx,fy, xx, yy; //指の位置
+void drawFingerTip(float a,float b,float d,float e,int f) {
+  float fx,fy, x, y; //指の位置
   fx = resizeX*a;
   fy = resizeY*b;
-  xx=fx+ w2; //左上が原点
-  yy=fy+ h2;
-  if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){
-    float angle = 0;
-    if(fx<= -w2) {
-      xx=0;
-      angle = PI;
-    }else if(fx>= w2) {
-      xx=width;
+  x=fx+ w2; //左上が原点
+  y=fy+ h2;
+  if(f==1){
+    if(fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ){
+      if(fx<= -w2) x=0;
+      if(fx>= w2) x=width;
+      if(fy<= -h2) y=0;
+      if(fy>= h2) y=height;  
+      stroke(255);
+      drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
+    }else {
+        float dis = dist(myself.loc.x, myself.loc.y, x, y);
+        if ( dis<=100 ){ //ロケットとカーソルの位置が近すぎたら
+        noFill();
+        strokeWeight(5);
+        stroke(255, 0, 0);
+        ellipse(myself.loc.x, myself.loc.y, 2*dis, 2*dis);
+        }else {
+         timefinish = millis();
+         if(state1==0||(state1==4&&timefinish-timestart>2000)||state1==1||state1==2||state1==3){
+           if((e==1.0&&state1==0)||(e==1.0&&state1==4)){ //小指をはじめてたてた時
+              n=fx;
+              m=fy;
+              state1=1;
+           }else if((e==0.0&&state1==1)||(e==0.0&&state1==2)){
+              noFill();
+              strokeWeight(5);
+              stroke(0,255,0);
+              ellipse(n+w2,m+h2,d,d);
+              state1=2;
+           }else if(e==1.0&&state1==2){
+              state1=3;
+              Enemy enemy =new Enemy(n+w2, m+h2, d, ene_number); //dは指の間の距離
+              enemies.add(enemy);
+           }else if(e==0.0&&state1==3){
+              state1=4;
+              timestart = millis();
+           }
+              stroke(255-aaa,255,aaa);
+              strokeWeight(5);
+              line(x, y+16, x, y-16);    //撃つ方向
+              line(x-16, y, x+16, y);    //撃つ方向
+         }else{
+              stroke(0,0,255);
+              strokeWeight(5);
+              line(x, y+16, x, y-16);    //撃つ方向
+              line(x-16, y, x+16, y);    //撃つ方向
+         }
+        }
     }
-    if(fy<= -h2) {
-      yy=0;
-      angle = PI/2;
-    }else if(fy>= h2) {
-      yy=height;
-      angle = 3*PI/2;
-    }
-    stroke(255);
-//    pushMatrix();
-//    translate(x, y);//円の中心に座標を合わせます
-//    rotate(angle);
-//    drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
-//    popMatrix();
-    drawTriangle(xx,yy,50);
-  }else {
-    float dis = dist(myself.loc.x, myself.loc.y, xx, yy);
-    if ( dis<=100 ){ //ロケットとカーソルの位置が近すぎたら
-      noFill();
-      strokeWeight(5);
-      stroke(255, 0, 0);
-      ellipse(myself.loc.x, myself.loc.y, 2*dis, 2*dis);
-    } else {
-      if(e==1.0&&state1==0){ //小指をはじめてたてた時
-        n=fx;
-        m=fy;
-        state1=1;
-      } else if(e==0.0&&state1==1){
-        ene_number=ene_number+1;
-        Enemy enemy =new Enemy(n+w2, m+h2, d, ene_number); //dは指の間の距離
-        enemies.add(enemy);
-        state1=0;
-      }
-    }
-    stroke(255-aaa,255,aaa);
-    strokeWeight(5);
-    line(xx, yy+16, xx, yy-16);    //撃つ方向
-    line(xx-16, yy, xx+16, yy);    //撃つ方向      
+   }else{
+    fx=0;
+    fy=0;
+    state1=0;
+    textSize(80);
+    fill(255);
+    text("NO SIGNAL",600,600);
   }
 /*
   fill(0,255,0);
@@ -281,7 +311,7 @@ void drawFingerTip(float a,float b,float d,float e) {
   text(fx, 0, height-100); //-250~250がよさそう
   textSize(56);
   text(fy, 0, height-50); //-250~250がよさそう
-*/  
+  */
 }
 
 class Myself{ //-------------------------ロケット
@@ -384,8 +414,7 @@ class Myself{ //-------------------------ロケット
     for(Enemy e: enemies){
       if(abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2){
         isDead = true;
-                stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)loc.x, (int)loc.y);
-
+        stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)loc.x, (int)loc.y);
         i = i++;
         e.isDead = true;
         hp = hp-100;
@@ -565,7 +594,7 @@ float[] fingergap1(Hand hand1,Hand hand2){
   fingers[0] = hand1.fingers();
   fingers[1] = hand2.fingers();
   //x[4]=0.0;
-  finger[0]=fingers[0].get(4);
+  finger[0]=fingers[0].get(2);
   finger[1]=fingers[0].get(1);
   for(int i = 2; i<4;i++)
   {
@@ -587,7 +616,20 @@ float[] fingergap1(Hand hand1,Hand hand2){
   {
     x[4]=0.0;
   }
-  return x;
+//  Vector fingertip1 = finger[1].tipPosition();
+  //if(fingertip1.getY()>400&&state2==0){
+  /*  state2=1;
+    x[5]=1.0;
+  }else if(fingertip1.getY()<200&&state2==1){
+    state2=2;
+    x[5]=2.0;
+  }
+    x[5]=0.0;
+    textSize(80);
+    fill(255);
+    text(fingertip1.getY(),600,600);
+    */
+    return x;
 }
 
 float gap(float x,float y,float z){
