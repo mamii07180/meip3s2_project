@@ -68,7 +68,7 @@ void setup(){
     while(true){
       ene_x = random(width);
       ene_y = random(height);
-      ene_r = random(25)*2;
+      ene_r = (15+random(30))*2;
       if(abs(w2 - ene_x) > 40 + ene_r && abs(height - 30 - ene_y) > 40 + ene_r) break;      
     }
     enemies.add(new Enemy(ene_x,ene_y,ene_r,ene_number)); //0,0なら適当に半径生成される(classに記載)
@@ -127,7 +127,7 @@ void draw(){
         enemies = nextEnemies;
   //    if(random(1) < 0.02){ //更新100回に2回の割合で敵作製
         ene_number=ene_number+1;
-        enemies.add(new Enemy(0,0,random(25)*2,ene_number));
+        enemies.add(new Enemy(0,0,(15+random(10))*2,ene_number));
   //    }
       }
     }
@@ -139,7 +139,17 @@ void draw(){
     background(0);
     stroke(255);
     noFill();
-    rect(5, 5, width-5, height-5); 
+//    rect(5, 5, width-5, height-5); 
+    strokeWeight(3);
+    line(10, 10, 10, 60);    //撃つ方向
+    line(10, 10, 60, 10);    //撃つ方向
+    line(width-10, height-10, width-10, height-60);    //撃つ方向
+    line(width-10, height-10, width-60, height-10);    //撃つ方向
+    line(10, height-10, 10, height-60);    //撃つ方向
+    line(10, height-10, 60, height-10);    //撃つ方向
+    line(width-10, 10, width-10, 60);    //撃つ方向
+    line(width-10, 10, width-60, 10);    //撃つ方向
+
     myself.display();
     for(Enemy enemy: enemies){
       enemy.display();
@@ -195,19 +205,29 @@ void draw(){
     //HPと撃墜数の表示
     fill(255);
     textSize(26);
+    noStroke();
     noFill();
     stroke(255);
     strokeWeight(1);
-    rect(62, 12,106, 18);
+    rect(82, 22, 106, 18);
     fill(0,255,0);
-    text("HP", 10, 35);
+    text("HP", 30, 45);
 //  text(hp, 60, 35);
     rectMode(CORNER);
     noStroke();
-    rect(65, 15, hp/10, 12);
+    rect(85, 25, hp/10, 12);
+    if(hp<=300)fill(255,0,0);
+    else fill(255);
+    text("HIT", 30, 70);
+    text(hit, 80, 70);
+    noFill();
+    stroke(0,255,0);
+    rect(width-175, 30, 150, 100); //ロケット座標用
+    textSize(30);
     fill(255);
-    text("HIT", 10, 60);
-    text(hit, 60, 60);
+    text("x:", width-160,65);
+    text("y:", width-160,105);
+
     stukaEffect.effectPlay();
   }
 
@@ -295,9 +315,9 @@ void drawFingerTip(float a,float b,float d,float e,int f) {
               line(x, y+16, x, y-16);    //撃つ方向
               line(x-16, y, x+16, y);    //撃つ方向
          }
-        }
+       }
     }
-   }else{
+  }else{
     fx=0;
     fy=0;
     state1=0;
@@ -368,13 +388,15 @@ class Myself{ //-------------------------ロケット
       data = int(split(input, ' ')); // Split values into an array
       // Draw line using received coords
       if(data[0]==0){
-        stroke(0);
+        fill(255);
         rocketX = data[1]+w2;
         rocketY = -data[2]+h2;
         loc.x=rocketX;
         loc.y=rocketY;
-        text(rocketX, w2,h2);
-        text(rocketY, w2+200,h2);
+        textSize(20);
+        text(rocketX, width-130,65);
+        text(rocketY, width-130,105);
+
       }else if(data[0]==1){
         float bangle = radians(data[1]);
 //        if( coolingTime >= 10){
@@ -414,7 +436,7 @@ class Myself{ //-------------------------ロケット
     for(Enemy e: enemies){
       if(abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2){
         isDead = true;
-        stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)loc.x, (int)loc.y);
+        stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)e.loc.x, (int)e.loc.y);
         i = i++;
         e.isDead = true;
         hp = hp-100;
@@ -530,7 +552,7 @@ class Enemy{ //-------------------------------敵
         isDead = true;
         b.isDead = true;
         hit = hit+1;
-        stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)b.loc.x, (int)b.loc.y);
+        stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)loc.x, (int)loc.y);
         client.write(4+" "+number+" "+0+"\n");  //死滅した個体番号を送信
         break;
       }
