@@ -247,7 +247,6 @@ void draw() {
   } else {
     f=0;
   }
-<<<<<<< HEAD
   x = fingergap1(hand[0], hand[1]);
   /*  if(x[5]==0.0){
    textSize(80);
