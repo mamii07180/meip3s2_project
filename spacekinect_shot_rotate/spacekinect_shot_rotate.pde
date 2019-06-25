@@ -179,7 +179,7 @@ int height=840;
 void setup() {
   size(1120, 840, P3D);
   //change
-  s = new Server(this,12345);
+  s = new Server(this,10000);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
@@ -206,8 +206,13 @@ void setup() {
   // player.accel(0.5);
 }
 
+int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
+  stroke(0, 255, 0, 64); strokeWeight(2); noFill();
+    translate(-player.pos.x, 0, 8400-player.pos.z);
+    box(1, 10000, 10000);
+    noStroke();
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   background(0);
@@ -237,15 +242,16 @@ void draw(){
     }
     // Draw line using received coords
   }
-  int x_send=int(player.pos.x);
-  int y_send=int(-player.pos.z);
+  int x_send=int(player.pos.x/10);
+  int y_send=int(player.pos.z/10 -10);
   if(shoot==1){
   int theta_send=int(theta);
   s.write(1 + " " + theta_send + " " +  "\n");
-  delay(10);
+  delay(50);
   shoot = 0;
-  } else{
+  } else if(drawcounter%3==0){//弾をうっていない時のみ座標を送る
   s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  
+  delay(10);
   }
   //0:serve (x,y)
   //stop
@@ -334,6 +340,8 @@ void draw(){
   stroke(0,200,0);
   drawDiamond(0.9*width,0.9*height,60,theta);
   
+  drawcounter++;
+  
 }
 
 //↑コンパスのひし形を書く用
@@ -373,8 +381,8 @@ void input(){
         
          float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
          float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
-         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
-         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
          if(LeftDiff<0) InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
          if(RightDiff<0) InputRight=-InputRight;
          if(InputLeft*InputRight<0)//左右の上下が反対なら回転
@@ -396,7 +404,6 @@ void input(){
          
       }
     }
-    println(sp);
 
 }
 
