@@ -48,10 +48,10 @@ StukaEffect stukaEffect;
 void setup(){
 //  s = new Server(this, 12345); // Start a simple server on a port
 //  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
-  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-//  client = new Client(this, "157.82.202.205", 10000);
+ // client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+ client = new Client(this, "157.82.202.205", 10000);
   
-  size(2560,1280);
+  size(1280,640);
 //  fullScreen(P3D);
   resizeX = (int)width/500;
   resizeY = (int)height/200;
@@ -249,7 +249,7 @@ void draw(){
   f=0;
   }
   x = fingergap1(hand[0],hand[1]);
-/*  if(x[5]==0.0){
+  /*if(x[5]==0.0){
     textSize(80);
     fill(255);
     text("この世は無である..",600,600);
@@ -390,7 +390,7 @@ class Myself{ //-------------------------ロケット
       if(data[0]==0){
         fill(255);
         rocketX = data[1]+w2;
-        rocketY = -data[2]+h2;
+        rocketY = data[2]+h2;
         loc.x=rocketX;
         loc.y=rocketY;
         textSize(20);
@@ -516,7 +516,9 @@ class Enemy{ //-------------------------------敵
     isDead = false;
 /*    client.write(2+" "+number+" "+(int)loc.x+"\n");  //個体番号、座標、半径を送信
     client.write(5+" "+(int)loc.y+" "+size+"\n");  //個体番号、座標、半径を送信*/
-    client.write(2+" "+number+" "+(int)loc.x+" "+(int)loc.y+" "+(int)size+"\n");  //個体番号、座標、半径を送信
+    client.write(2+" "+number+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10 + 100) +" "+(int)size*10+"\n"); 
+    delay(100);
+    println(loc.x,loc.y);//個体番号、座標、半径を送信
   }
   
   void display(){
@@ -607,7 +609,6 @@ void mouseReleased()
   }*/
 }
 
-
 float[] fingergap1(Hand hand1,Hand hand2){
   float[] x=new float[5];
   FingerList [] fingers = new FingerList[2];
@@ -638,9 +639,9 @@ float[] fingergap1(Hand hand1,Hand hand2){
   {
     x[4]=0.0;
   }
-//  Vector fingertip1 = finger[1].tipPosition();
+ // Vector fingertip1 = finger[1].tipPosition();
   //if(fingertip1.getY()>400&&state2==0){
-  /*  state2=1;
+    /*state2=1;
     x[5]=1.0;
   }else if(fingertip1.getY()<200&&state2==1){
     state2=2;
