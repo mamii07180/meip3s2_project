@@ -206,4 +206,3 @@ class NonEffect extends Effect {
     //nothing.
   }
 }
-
