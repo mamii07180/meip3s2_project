@@ -203,7 +203,6 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
-  // player.accel(0.5);
 }
 
 int drawcounter = 0;
@@ -229,6 +228,7 @@ void draw(){
     if(data[0] ==2){
       println(data[0],data[1],data[2],data[3],data[4]);
      enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+     if(data[1]==15)player.accel(5);
     } 
     // delete obstacle
     if(data[0] ==4){
@@ -334,11 +334,13 @@ void draw(){
   cameraShake *= 0.95;
   
   
-  //機体の傾き表現用
-  stroke(0,0,200);
-  ellipse(0.9*width,0.9*height,30,30);//青の外円
+  //機体の向き表現用
   stroke(0,200,0);
   drawDiamond(0.9*width,0.9*height,60,theta);
+  //stroke(0,0,200);
+  
+  //機体の傾き表現用
+  
   
   drawcounter++;
   
@@ -353,13 +355,9 @@ void drawDiamond(float x,float y,float r,float theta_d)
   beginShape();
   for(int i=0;i<4;i++)
   {
-    if(i%2==0)
-    {
-      R=r/5;//真ん中の2点
-    }else
-    {
-      R=r;
-    }
+    if(i%2==0)R=r/5;//真ん中の2点
+    else if(i==1)R=r/10;//向いていない方向は小さく
+    else R=r;//向いている方向は大きく
     vertex(R*cos(radians(90*i+theta_d)),R*sin(radians(90*i+theta_d)));//点を打つ
   }
   endShape(CLOSE);//閉じてね
@@ -394,10 +392,10 @@ void input(){
          //腕を両方あげるとスピードアップ(減速は保留）)
        
         
-         if(InputLeft>0 && InputRight>0 && sp < 2)
+         if(InputLeft>0 && InputRight>0 && sp < 1000)
         {
           player.accel(0.01);
-        } else if(sp > 0.5){
+        } else if(sp > 500){
          player.vel.mult(0.99);
          }
          
