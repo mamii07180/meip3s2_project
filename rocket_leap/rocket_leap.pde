@@ -240,7 +240,7 @@ void draw() {
 
     stukaEffect.effectPlay();
   }
- Frame frame = leap.frame();
+  Frame frame = leap.frame();
   HandList hands = frame.hands();
 //  iBox = frame.interactionBox();
   Hand[] hand = new Hand[2];
@@ -707,7 +707,7 @@ void mouseReleased()
 }
 
 float[] fingergap1(Hand hand1,Hand hand2){
-  float[] x=new float[5];
+  float[] x=new float[6];
   FingerList [] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
   Vector[]  tipPos = new Vector[4];
@@ -745,6 +745,8 @@ float[] fingergap1(Hand hand1,Hand hand2){
   }else if((fingertip1.getY()>300&&state2==2)||state2==3){
     x[5]=3.0;
     state2=3;
+  }else {
+    x[5] = 0;
   }
     return x;
 }
