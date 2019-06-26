@@ -14,7 +14,9 @@ Controller leap = new Controller();         // leap という名前で Controlle
 
 int state1=0;
 int state2=0;
+int state3=0;
 int f=0;
+int g1=0;
 float n, m;
 float timestart=0.0;
 float timefinish=0.0;
@@ -238,35 +240,51 @@ void draw() {
 
     stukaEffect.effectPlay();
   }
-
-
-  Frame frame = leap.frame();
+ Frame frame = leap.frame();
   HandList hands = frame.hands();
-  //  iBox = frame.interactionBox();
+//  iBox = frame.interactionBox();
   Hand[] hand = new Hand[2];
   Vector[] palmPos = new Vector[2];
-  float[] x= new float[5];
-  for (int i = 0; i<2; i++) {
+  float[] x= new float[6];
+  for(int i = 0; i<2; i++)  {
     hand[i]=hands.get(i);
     palmPos[i]=hand[i].palmPosition();
   }
-  if (palmPos[0].getX()>palmPos[1].getX()&&hands.count()==2) {
-    f=1;
-  } else {
-    f=0;
+  if(palmPos[0].getX()>palmPos[1].getX()&&hands.count()==2){
+  f=1;
   }
-  x = fingergap1(hand[0], hand[1]);
-  /*  if(x[5]==0.0){
-   textSize(80);
-   fill(255);
-   text("この世は無である..",600,600);
-   }else if(x[5]==1.0){
-   textSize(80);
-   fill(255);
-   text("光..",600,600);
-   }else if(x[5]==2.0){*/
-  drawFingerTip(x[0], x[2], x[3], x[4], f);
-  //}
+  else{
+  f=0;
+  }
+  x = fingergap1(hand[0],hand[1]);
+  if(state3==0){
+  if(x[5]==0.0){
+    background(0);
+    textSize(80);
+    fill(255);
+    text("The World is Nothing",600,600);
+  }else if(x[5]==1.0){
+    background(0);
+    textSize(80);
+    fill(255);
+    text("Let there be...",600,600);
+  }else if(x[5]==2.0){
+    if(g1<256){
+    background(g1);
+    textSize(80);
+    fill(255);
+    text("Light!!",600,600);
+    g1++;
+    }else if(g1>=256&&g1<511){
+     background(511-g1);
+     g1++;
+    }else if(g1==511){
+    state3=1;
+    }
+  }
+  }else if(state3==1){
+  drawFingerTip(x[0],x[2],x[3],x[4],f);
+  }
 }
 
 void drawFingerTip(float a, float b, float d, float e, int f) {
@@ -291,14 +309,14 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
         strokeWeight(5);
         stroke(255, 0, 0);
         ellipse(myself.loc.x, myself.loc.y, 2*dis, 2*dis);
-      } else if ( edis<=100 ) { //ロケットとカーソルの位置が近すぎたら
+      }else if ( edis<=100 ) { //ロケットとカーソルの位置が近すぎたら
         noFill();
         strokeWeight(5);
         stroke(255, 0, 0);
         ellipse(earth.loc.x, earth.loc.y, 2*edis, 2*edis);
       } else {
         timefinish = millis();
-        if (state1==0||(state1==4&&timefinish-timestart>2000)||state1==1||state1==2||state1==3) {
+        if (state1==0||(state1==4&&timefinish-timestart>2000&&timefinish-timestart<4000)||state1==1||state1==2||state1==3) {
           if ((e==1.0&&state1==0)||(e==1.0&&state1==4)) { //小指をはじめてたてた時
             n=fx;
             m=fy;
@@ -328,11 +346,34 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
           strokeWeight(5);
           line(x, y+16, x, y-16);    //撃つ方向
           line(x-16, y, x+16, y);    //撃つ方向
-        } else {
-          stroke(0, 0, 255);
-          strokeWeight(5);
-          line(x, y+16, x, y-16);    //撃つ方向
-          line(x-16, y, x+16, y);    //撃つ方向
+        }else if(timefinish-timestart<=2000){
+              stroke(0,0,255);
+              strokeWeight(5);
+              line(x, y+16, x, y-16);    //撃つ方向
+              line(x-16, y, x+16, y);    //撃つ方向
+         }else if(state1==5||state1==6||state1==7||(timefinish-timestart>=4000&&state1==4)){
+           if(e==1.0&&state1==4){ //小指をはじめてたてた時
+              n=fx;
+              m=fy;
+              state1=5;
+           }else if((e==0.0&&state1==5)||(e==0.0&&state1==6)){
+              noFill();
+              strokeWeight(5);
+              stroke(0,255,0);
+              ellipse(n+w2,m+h2,d,d);
+              state1=6;
+           }else if(e==1.0&&state1==6){
+              state1=7;
+              Enemy enemy =new Enemy(n+w2, m+h2, d, ene_number); //dは指の間の距離
+              enemies.add(enemy);
+           }else if(e==0.0&&state1==7){
+              state1=4;
+              timestart = millis();
+           }   
+              stroke(aaa,255-aaa,255);
+              strokeWeight(5);
+              line(x, y+16, x, y-16);    //撃つ方向
+              line(x-16, y, x+16, y);    //撃つ方向
         }
       }
     }
@@ -461,7 +502,7 @@ class Earth { //-------------------------地球
 
   Earth() {
     size = 200;
-    while(abs(w2-x)<100 || abs(y-h2)<100 || !ok){ //場所をいい感じの所に調整
+    while(abs(w2-x)<300 || abs(y-h2)<300 || !ok){ //場所をいい感じの所に調整
       x = random(width);
       y = random(height);
       for (Enemy e : enemies){
@@ -680,19 +721,17 @@ float[] fingergap1(Hand hand1,Hand hand2){
   {
     x[4]=0.0;
   }
- // Vector fingertip1 = finger[1].tipPosition();
-  //if(fingertip1.getY()>400&&state2==0){
-    /*state2=1;
+  Vector fingertip1 = finger[1].tipPosition();
+  if((fingertip1.getY()>400&&state2==0)||(fingertip1.getY()>=200&&state2==1)){
     x[5]=1.0;
-  }else if(fingertip1.getY()<200&&state2==1){
-    state2=2;
+    state2=1;
+  }else if((fingertip1.getY()<200&&state2==1)||(fingertip1.getY()<=300&&state2==2)){
     x[5]=2.0;
+    state2=2;
+  }else if((fingertip1.getY()>300&&state2==2)||state2==3){
+    x[5]=3.0;
+    state2=3;
   }
-    x[5]=0.0;
-    textSize(80);
-    fill(255);
-    text(fingertip1.getY(),600,600);
-    */
     return x;
 }
 
