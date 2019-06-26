@@ -285,11 +285,17 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
       drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
     } else {
       float dis = dist(myself.loc.x, myself.loc.y, x, y);
+      float e-dis = dist(earth.loc.x, earth.loc.y, x, y);
       if ( dis<=100 ) { //ロケットとカーソルの位置が近すぎたら
         noFill();
         strokeWeight(5);
         stroke(255, 0, 0);
         ellipse(myself.loc.x, myself.loc.y, 2*dis, 2*dis);
+      else if ( e-dis<=100 ) { //ロケットとカーソルの位置が近すぎたら
+        noFill();
+        strokeWeight(5);
+        stroke(255, 0, 0);
+        ellipse(earth.loc.x, earth.loc.y, 2*e-dis, 2*e-dis);
       } else {
         timefinish = millis();
         if (state1==0||(state1==4&&timefinish-timestart>2000)||state1==1||state1==2||state1==3) {
