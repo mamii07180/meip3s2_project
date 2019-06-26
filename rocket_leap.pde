@@ -57,8 +57,8 @@ void setup(){
   
   size(1280,640);
 //  fullScreen(P3D);
-  resizeX = (int)width/250;
-  resizeY = (int)height/100;
+  resizeX = (int)width/500;
+  resizeY = (int)height/200;
   w2 = width/2;
   h2 = height/2;
 
@@ -240,7 +240,7 @@ void draw() {
 
     stukaEffect.effectPlay();
   }
-  Frame frame = leap.frame();
+ Frame frame = leap.frame();
   HandList hands = frame.hands();
 //  iBox = frame.interactionBox();
   Hand[] hand = new Hand[2];
@@ -295,26 +295,12 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
   y=fy+ h2;
   if (f==1) {
     if (fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ) {
-      float angle=0;
-      if (fx<= -w2) {
-        x=50;
-        angle = 3*PI/2;
-      }
-      if (fx>= w2)  {
-        x=width-50;
-        angle = PI/2;
-      }
-      if (fy<= -h2)    y=50;
-      if (fy>= h2) {
-        y=height-50;
-        angle = PI;
-      }
+      if (fx<= -w2) x=0;
+      if (fx>= w2) x=width;
+      if (fy<= -h2) y=0;
+      if (fy>= h2) y=height;  
       stroke(255);
-      pushMatrix();
-      translate(x, y);//円の中心に座標を合わせます
-      rotate(angle);
-      drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
-      popMatrix();
+      drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
     } else {
       float dis = dist(myself.loc.x, myself.loc.y, x, y);
       float edis = dist(earth.loc.x, earth.loc.y, x, y);
@@ -707,7 +693,7 @@ void mouseReleased()
 }
 
 float[] fingergap1(Hand hand1,Hand hand2){
-  float[] x=new float[6];
+  float[] x=new float[5];
   FingerList [] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
   Vector[]  tipPos = new Vector[4];
@@ -745,8 +731,6 @@ float[] fingergap1(Hand hand1,Hand hand2){
   }else if((fingertip1.getY()>300&&state2==2)||state2==3){
     x[5]=3.0;
     state2=3;
-  }else {
-    x[5] = 0;
   }
     return x;
 }
