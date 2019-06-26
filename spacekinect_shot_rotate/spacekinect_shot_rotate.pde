@@ -20,7 +20,7 @@ Player player = new Player(0, 0, 100, 10);  // プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
 ArrayList effectList = new ArrayList(); 
-
+ArrayList walllist = new ArrayList();
 ArrayList<Enemy> enemies;    //change
 // エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
@@ -56,6 +56,7 @@ class Chara {
   }
   void update() {
     pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+    
   }
   boolean isHit(Chara chara) {
     if(group==chara.group) return false;
@@ -99,6 +100,13 @@ class Player extends Fighter {
     box(radius, radius, radius*5);
     noStroke();
   }
+   void update() {
+    pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+    if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){
+      pos.x = 0;
+      pos.z = 0;
+  }
+   }
 }
 //change
 // 敵戦闘機クラス
@@ -135,6 +143,29 @@ class Effect extends Chara  {
     pushMatrix();
     translate(loc.x,loc.z);
     sphere(radius);
+    popMatrix();
+  }
+}
+class Wall extends Chara  {
+  PVector loc;
+  Wall(float _x, float _y, float _z, float _radius) {
+    super(_x, _y, _z, _radius, EFFECT); 
+    loc = new PVector(_x,_y,_z);
+}
+  void drawShape() {
+    
+    fill(0, 64, 255,map(abs(player.pos.z-loc.z),0,1000,0,40));
+    pushMatrix();
+    translate(loc.x,loc.y,loc.z);
+    
+    if(radius == 0 && abs(player.pos.z-loc.z*2)<1000){
+    fill(0, 64, 255,map(abs(player.pos.z-loc.z*2),0,1000,40,0));
+    box(15000,15000,1);
+    }else if(radius == 1 && abs(player.pos.x-loc.x*2)<1000) {
+    fill(0, 64, 255,map(abs(player.pos.x-loc.x*2),0,1000,40,0));
+    box(1,15000,15000);
+    
+    }
     popMatrix();
   }
 }
@@ -192,7 +223,16 @@ void setup() {
   //for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
    // for(Enemy enemy: enemies){
     //  enemy.drawShape();
-     
+    Wall wall1 = new Wall(0,0,-1550,0);
+    walllist.add(wall1); 
+    Wall wall2 = new Wall(0,0,1650,0);
+    walllist.add(wall2);
+    Wall wall3 = new Wall(-3200,0,0,1);
+    walllist.add(wall3);
+    Wall wall4 = new Wall(3200,0,0,1);
+    walllist.add(wall4);
+    Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+    enemies.add(enemy1);
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -208,10 +248,7 @@ void setup() {
 int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  stroke(0, 255, 0, 64); strokeWeight(2); noFill();
-    translate(-player.pos.x, 0, 8400-player.pos.z);
-    box(1, 10000, 10000);
-    noStroke();
+  println(player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   background(0);
@@ -278,6 +315,10 @@ void draw(){
     effect.draw();
     if(effect.life<=0) effectList.remove(i--); // 寿命で消滅
   }
+  for (int i=0;i<walllist.size();i++) {
+    Wall wall = (Wall) walllist.get(i);
+    wall.draw();
+  }
   //change
    for (int i = 0; i < skeletonArray.size(); i++) {
 
@@ -333,7 +374,26 @@ void draw(){
   input();
   cameraShake *= 0.95;
   
-  
+  if(player.life>0) {
+    float goaldis = player.pos.dist(new PVector(0,0,-1000));
+    if(goaldis<100) {
+      player.vel.x = 0;  player.vel.z = 0; 
+      fill(255, 128);
+      textSize(40);
+      text("MISSION CLEAR", width/2, height/2 - 40);
+      
+      if(clearMillis==0) clearMillis = millis();
+      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
+    } else {
+      text("" + goaldis + " m", width/2, 30);
+      textAlign(RIGHT, CENTER);
+      text("life " + nf(player.life, 1, 0), width/3, height-30);
+      rectMode(CORNER);
+      noStroke();
+      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
+    }
+  } else text("GAME OVER", width/2, height/2);
+
   //機体の向き表現用
   stroke(0,200,0);
   drawDiamond(0.9*width,0.9*height,60,theta);
