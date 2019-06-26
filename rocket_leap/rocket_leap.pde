@@ -20,6 +20,7 @@ float timestart=0.0;
 float timefinish=0.0;
 
 Myself myself;
+Earth earth;
 ArrayList<Enemy> enemies;
 ArrayList<Bullet> myBullets;
 ArrayList<Bullet> eneBullets; //相手の弾（今回はいらない）
@@ -44,12 +45,13 @@ int[] data = new int[3];
 //エフェクト
 ImgList imgList;
 StukaEffect stukaEffect;
+PImage img; //地球
 
 void setup(){
 //  s = new Server(this, 12345); // Start a simple server on a port
 //  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
- // client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
- client = new Client(this, "157.82.202.205", 10000);
+  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+// client = new Client(this, "157.82.202.205", 10000);
   
   size(1280,640);
 //  fullScreen(P3D);
@@ -82,21 +84,26 @@ void setup(){
     //      }
   }
   enemies = nextEnemies;
-  for (Enemy enemy : enemies) {
-    enemy.display();
-  }
+
+  earth = new Earth();
 
   imgList = new ImgList();
   stukaEffect = new StukaEffect();
   imageMode(CENTER);
+  
+  img = loadImage("chikyuu.png");
 }
 
 void draw() {
-  if (hp<=0) { //HPがなくなったら止まる
+  float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
+  if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
+    client.write(6 +"\n"); 
+    background(0);
     noStroke();
     textSize(86);
     fill(255);
-    text("GAME OVER !!", w2, h2);
+    if ( hp<=0 ) text("YOU WIN!!", w2, h2);
+    else text("GAME OVER !!", w2, h2);
     if (w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) {
       fill(255, 0, 0);
     } else {
@@ -141,16 +148,17 @@ void draw() {
     noFill();
     //    rect(5, 5, width-5, height-5); 
     strokeWeight(3);
-    line(10, 10, 10, 60);    //撃つ方向
-    line(10, 10, 60, 10);    //撃つ方向
-    line(width-10, height-10, width-10, height-60);    //撃つ方向
-    line(width-10, height-10, width-60, height-10);    //撃つ方向
-    line(10, height-10, 10, height-60);    //撃つ方向
-    line(10, height-10, 60, height-10);    //撃つ方向
-    line(width-10, 10, width-10, 60);    //撃つ方向
-    line(width-10, 10, width-60, 10);    //撃つ方向
+    line(10, 10, 10, 60);    //四つ角
+    line(10, 10, 60, 10);    
+    line(width-10, height-10, width-10, height-60);    
+    line(width-10, height-10, width-60, height-10);    
+    line(10, height-10, 10, height-60);    
+    line(10, height-10, 60, height-10);    
+    line(width-10, 10, width-10, 60);    
+    line(width-10, 10, width-60, 10);    
 
     myself.display();
+    earth.display();
     for (Enemy enemy : enemies) {
       enemy.display();
     }
@@ -326,7 +334,7 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
     fx=0;
     fy=0;
     state1=0;
-    textSize(80);
+    textSize(50);
     fill(255);
     text("NO SIGNAL", 600, 600);
   }
@@ -392,7 +400,7 @@ class Myself { //-------------------------ロケット
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, ' ')); // Split values into an array
       // Draw line using received coords
-      if (data[0]==0) {
+      if (data[0]==0) { //位置情報
         fill(255);
         rocketX = data[1]+w2;
         rocketY = data[2]+h2;
@@ -401,25 +409,12 @@ class Myself { //-------------------------ロケット
         textSize(20);
         text(rocketX, width-130, 65);
         text(rocketY, width-130, 105);
-      } else if (data[0]==1) {
+      } else if (data[0]==1) { //銃発射
         float bangle = radians(data[1]);
-        //        if( coolingTime >= 10){
         myBullets.add(new Bullet(bangle));
-        //         coolingTime = 0;
-        //       }
       }
     }
 
-    //    float dmx = rocketX - loc.x;
-    //    float dmy = rocketY - loc.y;
-    //    if(dmx != 0 && dmy !=0){
-    //      angle = angle+constrain(atan2(dmx,-dmy)-angle, -PI/12, PI/12);
-    //    }
-    //    dmx = constrain(dmx, -3, 3); //最小値-5最大値5
-    // loc.x += dmx;
-    //    dmy = constrain(dmy, -3, 3); //最小値-5最大値5
-    // loc.y += dmy; 
-    //    coolingTime++;
     /*
     if(mousePressed && mouseButton==LEFT && coolingTime >= 10){
      myBullets.add(new Bullet());
@@ -452,8 +447,44 @@ class Myself { //-------------------------ロケット
   }
 }
 
-class Bullet { //-------------------------銃
+class Earth { //-------------------------地球
+  PVector loc;
+  float size;
+  float x,y,angle;
+  boolean ok=false;
 
+  Earth() {
+    size = 200;
+    while(abs(w2-x)<300 || abs(y-h2)<300 || !ok){ //場所をいい感じの所に調整
+      x = random(width);
+      y = random(height);
+      for (Enemy e : enemies){
+        if(dist(x, y, e.loc.x, e.loc.y)<=100) {
+          ok = false;
+          break;
+        } else {
+          ok = true;
+        }
+      }
+    }
+    loc = new PVector(x, y);
+    client.write(5+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10 + 100) +"\n"); 
+    delay(100);
+  }
+
+  void display() {
+    angle=angle+0.1;
+    if(angle >=2*PI) angle = 0;
+    pushMatrix();
+    translate(loc.x, loc.y);//円の中心に座標を合わせます
+    rotate(angle);
+    image(img, 0, 0, 80, 80);    
+    popMatrix();
+  }
+}
+
+
+class Bullet { //-------------------------銃
   PVector loc;
   float vel;
   float bangle;
