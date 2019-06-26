@@ -25,6 +25,10 @@ ArrayList<Enemy> enemies;    //change
 // エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
 int clearMillis = 0;                        // クリアタイム
+PImage img;
+PShape sphere;
+
+
 
 // 3D空間に配置する基本オブジェクトクラス
 class Chara {
@@ -220,6 +224,11 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
+  //地球用
+  img = loadImage("earth.jpg");
+  sphere = createShape(SPHERE, 100);
+  sphere.setTexture(img);
+  sphere.setStrokeWeight(0);//線邪魔だった
 }
 
 int drawcounter = 0;
@@ -257,17 +266,12 @@ void draw(){
         }
       }
     }
-    if(data[0] ==6)
+    if(data[0] ==6)//地球
     {
-      println(data[0],data[1]);
-      for(Enemy enemy: enemies)
-      {
-        if(enemy.index ==  data[1])
-        {
-           enemy.isDead = true;
-           addExplosionEffect(enemy);
-        }
-      }
+      pushMatrix();
+      translate(data[0],data[2]);//地球のkinect座標系に変換されたx,z座標が送られてくる
+      shape(sphere);
+      popMatrix();
     }
     // Draw line using received coords
   }
