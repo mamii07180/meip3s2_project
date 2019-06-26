@@ -168,9 +168,26 @@ class Enemy extends Chara{ //-------------------------------敵
     sphere(size);
     popMatrix();
   }
-  
- 
 }
+
+
+class Earth extends Chara
+{
+
+  PImage img = loadImage("earth.jpg");
+  PShape sphere = createShape(SPHERE, 100);
+  sphere.setTexture(img);
+  //sphere.setStrokeWeight(0);//線邪魔だった
+    
+    void drawShape(float x,float y,float z)
+  {
+    pushMatrix();
+    translate(x,z);
+    shape(sphere);
+    popMatrix();
+  }
+}
+  
 
 //stop
 int width=1120;
@@ -208,10 +225,7 @@ void setup() {
 int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  stroke(0, 255, 0, 64); strokeWeight(2); noFill();
-    translate(-player.pos.x, 0, 8400-player.pos.z);
-    box(1, 10000, 10000);
-    noStroke();
+  Earth.drawShape(100,0,100);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   background(0);
@@ -231,14 +245,29 @@ void draw(){
      if(data[1]==15)player.accel(5);
     } 
     // delete obstacle
-    if(data[0] ==4){
+    if(data[0] ==4)
+    {
       println(data[0],data[1]);
-      for(Enemy enemy: enemies){
-        if(enemy.index ==  data[1]){
+      for(Enemy enemy: enemies)
+      {
+        if(enemy.index ==  data[1])
+        {
            enemy.isDead = true;
            addExplosionEffect(enemy);
         }
-    } 
+      }
+    }
+    if(data[0] ==6)
+    {
+      println(data[0],data[1]);
+      for(Enemy enemy: enemies)
+      {
+        if(enemy.index ==  data[1])
+        {
+           enemy.isDead = true;
+           addExplosionEffect(enemy);
+        }
+      }
     }
     // Draw line using received coords
   }
