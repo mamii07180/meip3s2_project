@@ -55,8 +55,8 @@ void setup(){
   
   size(1280,640);
 //  fullScreen(P3D);
-  resizeX = (int)width/500;
-  resizeY = (int)height/200;
+  resizeX = (int)width/250;
+  resizeY = (int)height/100;
   w2 = width/2;
   h2 = height/2;
 
@@ -277,12 +277,26 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
   y=fy+ h2;
   if (f==1) {
     if (fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ) {
-      if (fx<= -w2) x=0;
-      if (fx>= w2) x=width;
-      if (fy<= -h2) y=0;
-      if (fy>= h2) y=height;  
+      float angle=0;
+      if (fx<= -w2) {
+        x=50;
+        angle = 3*PI/2;
+      }
+      if (fx>= w2)  {
+        x=width-50;
+        angle = PI/2;
+      }
+      if (fy<= -h2)    y=50;
+      if (fy>= h2) {
+        y=height-50;
+        angle = PI;
+      }
       stroke(255);
-      drawTriangle(x, y, 50);  // 横の位置、縦の位置、円の半径
+      pushMatrix();
+      translate(x, y);//円の中心に座標を合わせます
+      rotate(angle);
+      drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
+      popMatrix();
     } else {
       float dis = dist(myself.loc.x, myself.loc.y, x, y);
       float edis = dist(earth.loc.x, earth.loc.y, x, y);
