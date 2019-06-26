@@ -20,7 +20,7 @@ Player player = new Player(0, 0, 100, 10);  // プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
 ArrayList effectList = new ArrayList(); 
-
+ArrayList walllist = new ArrayList();
 ArrayList<Enemy> enemies;    //change
 // エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
@@ -56,6 +56,7 @@ class Chara {
   }
   void update() {
     pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+    
   }
   boolean isHit(Chara chara) {
     if(group==chara.group) return false;
@@ -99,6 +100,13 @@ class Player extends Fighter {
     box(radius, radius, radius*5);
     noStroke();
   }
+   void update() {
+    pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
+    if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){
+      pos.x = 0;
+      pos.z = 0;
+  }
+   }
 }
 //change
 // 敵戦闘機クラス
@@ -135,6 +143,29 @@ class Effect extends Chara  {
     pushMatrix();
     translate(loc.x,loc.z);
     sphere(radius);
+    popMatrix();
+  }
+}
+class Wall extends Chara  {
+  PVector loc;
+  Wall(float _x, float _y, float _z, float _radius) {
+    super(_x, _y, _z, _radius, EFFECT); 
+    loc = new PVector(_x,_y,_z);
+}
+  void drawShape() {
+    
+    fill(0, 64, 255,map(abs(player.pos.z-loc.z),0,1000,0,40));
+    pushMatrix();
+    translate(loc.x,loc.y,loc.z);
+    
+    if(radius == 0 && abs(player.pos.z-loc.z*2)<1000){
+    fill(0, 64, 255,map(abs(player.pos.z-loc.z*2),0,1000,40,0));
+    box(15000,15000,1);
+    }else if(radius == 1 && abs(player.pos.x-loc.x*2)<1000) {
+    fill(0, 64, 255,map(abs(player.pos.x-loc.x*2),0,1000,40,0));
+    box(1,15000,15000);
+    
+    }
     popMatrix();
   }
 }
@@ -179,7 +210,7 @@ int height=840;
 void setup() {
   size(1120, 840, P3D);
   //change
-  s = new Server(this,12345);
+  s = new Server(this,10000);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
@@ -192,7 +223,16 @@ void setup() {
   //for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
    // for(Enemy enemy: enemies){
     //  enemy.drawShape();
-     
+    Wall wall1 = new Wall(0,0,-1550,0);
+    walllist.add(wall1); 
+    Wall wall2 = new Wall(0,0,1650,0);
+    walllist.add(wall2);
+    Wall wall3 = new Wall(-3200,0,0,1);
+    walllist.add(wall3);
+    Wall wall4 = new Wall(3200,0,0,1);
+    walllist.add(wall4);
+    Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+    enemies.add(enemy1);
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -203,11 +243,12 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
-  // player.accel(0.5);
 }
 
+int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
+  println(player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   background(0);
@@ -224,6 +265,7 @@ void draw(){
     if(data[0] ==2){
       println(data[0],data[1],data[2],data[3],data[4]);
      enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+     if(data[1]==15)player.accel(5);
     } 
     // delete obstacle
     if(data[0] ==4){
@@ -237,15 +279,16 @@ void draw(){
     }
     // Draw line using received coords
   }
-  int x_send=int(player.pos.x);
-  int y_send=int(-player.pos.z);
+  int x_send=int(player.pos.x/10);
+  int y_send=int(player.pos.z/10 -10);
   if(shoot==1){
   int theta_send=int(theta);
   s.write(1 + " " + theta_send + " " +  "\n");
-  delay(10);
+  delay(50);
   shoot = 0;
-  } else{
+  } else if(drawcounter%3==0){//弾をうっていない時のみ座標を送る
   s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  
+  delay(10);
   }
   //0:serve (x,y)
   //stop
@@ -271,6 +314,10 @@ void draw(){
     Effect effect = (Effect) effectList.get(i);
     effect.draw();
     if(effect.life<=0) effectList.remove(i--); // 寿命で消滅
+  }
+  for (int i=0;i<walllist.size();i++) {
+    Wall wall = (Wall) walllist.get(i);
+    wall.draw();
   }
   //change
    for (int i = 0; i < skeletonArray.size(); i++) {
@@ -327,12 +374,35 @@ void draw(){
   input();
   cameraShake *= 0.95;
   
-  
-  //機体の傾き表現用
-  stroke(0,0,200);
-  ellipse(0.9*width,0.9*height,30,30);//青の外円
+  if(player.life>0) {
+    float goaldis = player.pos.dist(new PVector(0,0,-1000));
+    if(goaldis<100) {
+      player.vel.x = 0;  player.vel.z = 0; 
+      fill(255, 128);
+      textSize(40);
+      text("MISSION CLEAR", width/2, height/2 - 40);
+      
+      if(clearMillis==0) clearMillis = millis();
+      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
+    } else {
+      text("" + goaldis + " m", width/2, 30);
+      textAlign(RIGHT, CENTER);
+      text("life " + nf(player.life, 1, 0), width/3, height-30);
+      rectMode(CORNER);
+      noStroke();
+      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
+    }
+  } else text("GAME OVER", width/2, height/2);
+
+  //機体の向き表現用
   stroke(0,200,0);
   drawDiamond(0.9*width,0.9*height,60,theta);
+  //stroke(0,0,200);
+  
+  //機体の傾き表現用
+  
+  
+  drawcounter++;
   
 }
 
@@ -345,13 +415,9 @@ void drawDiamond(float x,float y,float r,float theta_d)
   beginShape();
   for(int i=0;i<4;i++)
   {
-    if(i%2==0)
-    {
-      R=r/5;//真ん中の2点
-    }else
-    {
-      R=r;
-    }
+    if(i%2==0)R=r/5;//真ん中の2点
+    else if(i==1)R=r/10;//向いていない方向は小さく
+    else R=r;//向いている方向は大きく
     vertex(R*cos(radians(90*i+theta_d)),R*sin(radians(90*i+theta_d)));//点を打つ
   }
   endShape(CLOSE);//閉じてね
@@ -373,8 +439,8 @@ void input(){
         
          float LeftDiff=joints[KinectPV2.JointType_ShoulderLeft].getY()-joints[KinectPV2.JointType_HandLeft].getY();
          float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
-         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
-         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,1);//絶対値が50以上500以下なら[0,1]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
+         float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
          if(LeftDiff<0) InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
          if(RightDiff<0) InputRight=-InputRight;
          if(InputLeft*InputRight<0)//左右の上下が反対なら回転
@@ -386,17 +452,16 @@ void input(){
          //腕を両方あげるとスピードアップ(減速は保留）)
        
         
-         if(InputLeft>0 && InputRight>0 && sp < 2)
+         if(InputLeft>0 && InputRight>0 && sp < 1000)
         {
           player.accel(0.01);
-        } else if(sp > 0.5){
+        } else if(sp > 500){
          player.vel.mult(0.99);
          }
          
          
       }
     }
-    println(sp);
 
 }
 
