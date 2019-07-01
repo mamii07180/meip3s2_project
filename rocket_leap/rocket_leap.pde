@@ -12,14 +12,9 @@ import processing.net.*;
 Controller leap = new Controller();         // leap という名前で Controller オブジェクトを宣言
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
-int state1=0;
-int state2=0;
 int state3=0;
 int f=0;
 int g1=0;
-float n, m;
-float timestart=0.0;
-float timefinish=0.0;
 
 Myself myself;
 Earth earth;
@@ -28,9 +23,9 @@ ArrayList<Bullet> myBullets;
 ArrayList<Bullet> eneBullets; //相手の弾（今回はいらない）
 int hp=1000;
 int hit=0;
+float aa=1;
 int aaa=1;
-int da=1;
-int resizeX, resizeY;
+float da=3;
 float w2, h2; //画面の半分サイズ（よく使うので）
 float d;
 float xx, yy;
@@ -53,12 +48,10 @@ void setup(){
 //  s = new Server(this, 12345); // Start a simple server on a port
 //  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
   client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-// client = new Client(this, "157.82.202.205", 10000);
+// client = new Client(this, "157.82.202.205", 10000); //mamii
   
   size(1280,640);
 //  fullScreen(P3D);
-  resizeX = (int)width/250;
-  resizeY = (int)height/100;
   w2 = width/2;
   h2 = height/2;
 
@@ -97,6 +90,17 @@ void setup(){
 }
 
 void draw() {
+    aa=aa+da;
+    aaa = (int)aa;
+    if (aa>255) {
+      aa=255;
+      da = -da;
+    }
+    if (aa<0) {
+      aa=0;
+      da = -da;
+    }
+
   float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
   if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
     client.write(6 +"\n"); 
@@ -105,7 +109,7 @@ void draw() {
     textSize(86);
     fill(255);
     if ( hp<=0 ) text("YOU WIN!!", w2, h2);
-    else text("GAME OVER !!", w2, h2);
+    else text("YOU LOSE...", w2, h2);
     if (w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) {
       fill(255, 0, 0);
     } else {
@@ -251,15 +255,29 @@ void draw() {
     palmPos[i]=hand[i].palmPosition();
   }
   if(palmPos[0].getX()>palmPos[1].getX()&&hands.count()==2){
-  f=1;
+    f=1;
   }
-  else{
-  f=0;
-  }
+  else {
+    f=0;
+    fill(122+aaa/2);
+    if(hands.count()==1){
+      textAlign(CENTER);
+      text("Put Both Hands",w2,h2);
+    } else {
+      textAlign(CENTER);
+      text("Put Your Hands",w2,h2);
+    }
+    textAlign(LEFT);
+  } 
   x = fingergap1(hand[0],hand[1]);
   if(state3==0){
   if(x[5]==0.0){
     background(0);
+    textSize(50);
+    fill(255,255,0,100+aaa/2);
+    textAlign(CENTER);
+    text("Put Your Hands",w2, h2);
+    textAlign(LEFT);
     textSize(80);
     fill(255);
     text("The World is Nothing",600,600);
@@ -286,34 +304,36 @@ void draw() {
   drawFingerTip(x[0],x[2],x[3],x[4],f);
   }
 }
-
+/*
 void drawFingerTip(float a, float b, float d, float e, int f) {
   float fx, fy, x, y; //指の位置
+  float timebig;
   fx = resizeX*a;
   fy = resizeY*b;
-  x=fx+ w2; //左上が原点
+  x=fx+ w2-100; //左上が原点、右にちょいずれ
   y=fy+ h2;
-  if (f==1) {
-    if (fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ) {
+  if (f==1) { //手の位置がいい感じだったら
+    if (fx<= -w2|| fx>= w2 || fy<= -h2 || fy>= h2 ) { //画面の外にはみでてたら
       float angle=0;
+      int trisize = 30;
       if (fx<= -w2) {
-        x=50;
+        x=trisize;
         angle = 3*PI/2;
       }
       if (fx>= w2)  {
-        x=width-50;
+        x=width-trisize;
         angle = PI/2;
       }
-      if (fy<= -h2)    y=50;
+      if (fy<= -h2)    y=trisize;
       if (fy>= h2) {
-        y=height-50;
+        y=height-trisize;
         angle = PI;
       }
       stroke(255);
       pushMatrix();
       translate(x, y);//円の中心に座標を合わせます
       rotate(angle);
-      drawTriangle(0, 0, 50);  // 横の位置、縦の位置、円の半径
+      drawTriangle(0, 0, trisize);  // 横の位置、縦の位置、円の半径
       popMatrix();
     } else {
       float dis = dist(myself.loc.x, myself.loc.y, x, y);
@@ -330,7 +350,7 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
         ellipse(earth.loc.x, earth.loc.y, 2*edis, 2*edis);
       } else {
         timefinish = millis();
-        if (state1==0||(state1==4&&timefinish-timestart>2000&&timefinish-timestart<4000)||state1==1||state1==2||state1==3) {
+        if (state1==0||(state1==4&&timefinish-timestart>2000&&timefinish-timestart<5000)||state1==1||state1==2||state1==3) {
           if ((e==1.0&&state1==0)||(e==1.0&&state1==4)) { //小指をはじめてたてた時
             n=fx;
             m=fy;
@@ -365,7 +385,7 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
               strokeWeight(5);
               line(x, y+16, x, y-16);    //撃つ方向
               line(x-16, y, x+16, y);    //撃つ方向
-         }else if(state1==5||state1==6||state1==7||(timefinish-timestart>=4000&&state1==4)){
+         }else if(state1==5||state1==6||state1==7||(timefinish-timestart>=5000&&state1==4)){
            if(e==1.0&&state1==4){ //小指をはじめてたてた時
               n=fx;
               m=fy;
@@ -378,6 +398,7 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
               state1=6;
            }else if(e==1.0&&state1==6){
               state1=7;
+              ene_number++;
               Enemy enemy =new Enemy(n+w2, m+h2, d, ene_number); //dは指の間の距離
               enemies.add(enemy);
            }else if(e==0.0&&state1==7){
@@ -395,18 +416,9 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
     fx=0;
     fy=0;
     state1=0;
-    textSize(50);
-    fill(255);
-    text("NO SIGNAL", 600, 600);
   }
-  /*
-  fill(0,255,0);
-   textSize(56);
-   text(fx, 0, height-100); //-250~250がよさそう
-   textSize(56);
-   text(fy, 0, height-50); //-250~250がよさそう
-   */
-}
+  
+}*/
 
 class Myself { //-------------------------ロケット
 
@@ -620,15 +632,6 @@ class Enemy { //-------------------------------敵
 
   void display() {
     //    fill(206,117,48);
-    aaa=aaa+da;
-    if (aaa>255) {
-      aaa=255;
-      da = -1;
-    }
-    if (aaa<0) {
-      aaa=0;
-      da = 1;
-    }
     fill(255-aaa, 255, aaa);
     stroke(255-aaa, 255, aaa);
     ellipse(loc.x, loc.y, size, size);
@@ -707,6 +710,7 @@ void mouseReleased()
 }
 
 float[] fingergap1(Hand hand1,Hand hand2){
+  int state2=0;
   float[] x=new float[6];
   FingerList [] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
