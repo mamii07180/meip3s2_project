@@ -13,20 +13,24 @@ int j = 15;
 int data[];
 int shoot; //timing of shoot
 float sp;
+int earth_e = 0;
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
-Player player = new Player(0, 0, 100, 10);  // プレイヤー
+Player player = new Player(0, 0, 100, 10);
+int earth_x; int earth_z;// プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
 ArrayList effectList = new ArrayList(); 
 ArrayList walllist = new ArrayList();
+ArrayList earthlist = new ArrayList();
 ArrayList<Enemy> enemies;    //change
 // エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
 int clearMillis = 0;                        // クリアタイム
 PImage img;
 PShape sphere;
+
 // 3D空間に配置する基本オブジェクトクラス
 class Chara {
   PMatrix3D matrix = new PMatrix3D();
@@ -171,7 +175,20 @@ class Wall extends Chara  {
   }
 }
 
-
+class Earth extends Chara  {
+  PVector loc;
+  Earth(float _x, float _y, float _z, float _radius) {
+    super(_x, _y, _z, _radius, ENEMY); 
+    loc = new PVector(_x,_y,_z);
+}
+  void drawShape() {
+   pushMatrix();
+   translate(loc.x,0,loc.z);//地球のkinect座標系に変換されたx,z座標が送られてくる
+   shape(sphere);
+   popMatrix();
+  
+  }
+}
 
 //change
 class Enemy extends Chara{ //-------------------------------敵
@@ -196,7 +213,7 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(loc.x,loc.z);
+    translate(loc.x/2,loc.z/2);
     sphere(size);
     popMatrix();
   }
@@ -232,8 +249,8 @@ void setup() {
     walllist.add(wall3);
     Wall wall4 = new Wall(3200,0,0,1);
     walllist.add(wall4);
-    Enemy enemy1 = new Enemy(0,0,-1000,30,4);
-    enemies.add(enemy1);
+    //Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+    //enemies.add(enemy1);
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -293,10 +310,12 @@ void draw(){
     }
     }
    if(data[0] == 6){
-     pushMatrix();
-      translate(data[0],data[2]);//地球のkinect座標系に変換されたx,z座標が送られてくる
-      shape(sphere);
-      popMatrix();
+      println(data[0],data[1],data[2]);
+      Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
+      earthlist.add(earth);
+      earth_e = 1;
+      earth_x = data[1];
+      earth_z = data[2];
    }
     // Draw line using received coords
   }
@@ -339,6 +358,10 @@ void draw(){
   for (int i=0;i<walllist.size();i++) {
     Wall wall = (Wall) walllist.get(i);
     wall.draw();
+  }
+  if(earth_e == 1){
+    Earth earth = (Earth) earthlist.get(0);
+    earth.draw();
   }
   //change
    for (int i = 0; i < skeletonArray.size(); i++) {
@@ -395,9 +418,10 @@ void draw(){
   input();
   cameraShake *= 0.95;
   
-  if(player.life>0) {
-    float goaldis = player.pos.dist(new PVector(0,0,-1000));
-    if(goaldis<100) {
+  if(player.life>0 ) {
+    if(earth_e == 1){
+    float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
+    if(goaldis<20) {
       background(0); 
       player.vel.x = 0;  player.vel.z = 0; 
       fill(255, 128);
@@ -407,12 +431,14 @@ void draw(){
       if(clearMillis==0) clearMillis = millis();
       text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
     }   else {
-      text("" + goaldis + " m", width/2, 30);
+      //text("" + goaldis + " m", width/2, 30);
+      text("" + player.pos.x + " " + int(player.pos.z-50), width/2, 30);
       textAlign(RIGHT, CENTER);
       text("life " + nf(player.life, 1, 0), width/3, height-30);
       rectMode(CORNER);
       noStroke();
       rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
+    }
     }
   } else {
      textSize(60);
@@ -425,8 +451,8 @@ void draw(){
   //stroke(0,0,200);
   
   //機体の傾き表現用
-  
-  
+ 
+   
   drawcounter++;
   
 }
