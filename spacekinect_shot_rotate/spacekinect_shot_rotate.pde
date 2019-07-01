@@ -25,6 +25,8 @@ ArrayList<Enemy> enemies;    //change
 // エフェクトリスト
 float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
 int clearMillis = 0;                        // クリアタイム
+PImage img;
+PShape sphere;//地球のテクスチャ用
 
 // 3D空間に配置する基本オブジェクトクラス
 class Chara {
@@ -237,12 +239,18 @@ void setup() {
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
    // for(Enemy enemy: enemies){
+     
     //    nextEnemies.add(enemy);
    // }
    // enemies = nextEnemies;
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
+  //地球用
+  img = loadImage("earth.jpg");
+  sphere=createShape(SPHERE,100);
+  sphere.setTexture(img);
+  sphere.setStrokeWeight(0);
 }
 
 int drawcounter = 0;
@@ -268,14 +276,24 @@ void draw(){
      if(data[1]==15)player.accel(5);
     } 
     // delete obstacle
-    if(data[0] ==4){
+    if(data[0] ==4)
+    {
       println(data[0],data[1]);
-      for(Enemy enemy: enemies){
-        if(enemy.index ==  data[1]){
+      for(Enemy enemy: enemies)
+      {
+        if(enemy.index ==  data[1])
+        {
            enemy.isDead = true;
            addExplosionEffect(enemy);
         }
-    } 
+      } 
+    }
+    if(data[0]==6);
+    {
+      pushMatrix();
+      translate(data[0],data[2]);//地球のkinect座標系に変換されたx,z座標が送られてくる
+      shape(sphere);
+      popMatrix();
     }
     // Draw line using received coords
   }
