@@ -67,7 +67,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
           else if (e == 1.0&&state1 == 2) { //指もっかいのばす
             if (timelag >= 5000) {
               ene_number++;
-              enemies.add(new Enemy(n, m, d, ene_number)); //dは指の間の距離、
+              enemies.add(new Enemy(n, m, d, ene_number, 1)); //dは指の間の距離、
               int dead_ene_num = ene_number - 15;
               Enemy dead = enemies.get(dead_ene_num);
               if (!dead.isDead) {
@@ -78,7 +78,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
             }
             else {
               ene_number++;
-              enemies.add(new Enemy(n, m, d, ene_number)); //dは指の間の距離、
+              enemies.add(new Enemy(n, m, d, ene_number, 0)); //dは指の間の距離、
               int dead_ene_num = ene_number - 15;
               Enemy dead = enemies.get(dead_ene_num);
               if (!dead.isDead) {
