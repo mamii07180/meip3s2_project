@@ -248,7 +248,7 @@ void setup() {
 int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  println(player.pos.x,player.pos.z);
+ // println(player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   background(0);
@@ -265,7 +265,14 @@ void draw(){
     if(data[0] ==2){
       println(data[0],data[1],data[2],data[3],data[4]);
      enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
-     if(data[1]==15)player.accel(5);
+     if(data[1]==15)player.accel(5);  //starting accel
+    } 
+    //reset
+    if(data[0] ==3){
+       player.pos.x = 0;
+       player.pos.z = 100;
+       player.vel.x = 0;
+       player.vel.z = 0;
     } 
     // delete obstacle
     if(data[0] ==4){
@@ -275,7 +282,10 @@ void draw(){
            enemy.isDead = true;
            addExplosionEffect(enemy);
         }
-    } 
+    }
+    if(data[2] == 1){
+      player.life -= 10;
+    }
     }
     // Draw line using received coords
   }
@@ -377,14 +387,15 @@ void draw(){
   if(player.life>0) {
     float goaldis = player.pos.dist(new PVector(0,0,-1000));
     if(goaldis<100) {
+      background(0); 
       player.vel.x = 0;  player.vel.z = 0; 
       fill(255, 128);
-      textSize(40);
+      textSize(60);
       text("MISSION CLEAR", width/2, height/2 - 40);
       
       if(clearMillis==0) clearMillis = millis();
       text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
-    } else {
+    }   else {
       text("" + goaldis + " m", width/2, 30);
       textAlign(RIGHT, CENTER);
       text("life " + nf(player.life, 1, 0), width/3, height-30);
@@ -392,8 +403,11 @@ void draw(){
       noStroke();
       rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
     }
-  } else text("GAME OVER", width/2, height/2);
-
+  } else {
+     textSize(60);
+     text("GAME OVER", width/2, height/2);
+     player.vel.x = 0;  player.vel.z = 0;
+  } 
   //機体の向き表現用
   stroke(0,200,0);
   drawDiamond(0.9*width,0.9*height,60,theta);
