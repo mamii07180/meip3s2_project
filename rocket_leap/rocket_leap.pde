@@ -9,9 +9,11 @@ import processing.net.*;
 * @date 2016/08/30
 */
 
+
 Controller leap = new Controller();         // leap という名前で Controller オブジェクトを宣言
                       //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
+int state2 = 0;
 int state3 = 0;
 int f = 0;
 int g1 = 0;
@@ -92,14 +94,73 @@ void setup() {
 void draw() {
   aa = aa + da;
   aaa = (int)aa;
-  if (aa>255) {
-    aa = 255;
+  if (aa>255 || aa<0) {
     da = -da;
+    aa = aa + da;
   }
-  if (aa<0) {
-    aa = 0;
-    da = -da;
+  Frame frame = leap.frame();
+  HandList hands = frame.hands();
+  Hand[] hand = new Hand[2];
+  Vector[] palmPos = new Vector[2];
+  float[] x = new float[6];
+  for (int i = 0; i<2; i++) {
+    hand[i] = hands.get(i);
+    palmPos[i] = hand[i].palmPosition();
   }
+  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) {
+    f = 1;
+  }
+  else {
+    f = 0;
+    fill(122 + aaa / 2);
+    if (hands.count() == 1) {
+      textAlign(CENTER);
+      text("Put Both Hands", w2, h2);
+    }
+    else {
+      textAlign(CENTER);
+      text("Put Your Hands", w2, h2);
+    }
+    textAlign(LEFT);
+  }
+  x = fingergap1(hand[0], hand[1]);
+  if (state3 == 0) {
+    if (x[5] == 0.0) {
+      background(0);
+      textSize(50);
+      fill(255, 255, 0, 100 + aaa / 2);
+      text("Put Your Hands", w2, h2);
+      textSize(80);
+      fill(255);
+      text("The World is Nothing", 600, 600);
+    }
+    else if (x[5] == 1.0) {
+      background(0);
+      textSize(80);
+      fill(255);
+      text("Let there be...", 600, 600);
+    }
+    else if (x[5] == 2.0) {
+      if (g1<256) {
+        background(g1);
+        textSize(80);
+        fill(255);
+        textAlign(CENTER);
+        text("Light!!", 600, 600);
+        textAlign(LEFT);
+        g1++;
+      }
+      else if (g1 >= 256 && g1<511) {
+        background(511 - g1);
+        g1++;
+      }
+      else if (g1 == 511) {
+        state3 = 1;
+      }
+    }
+  }
+  else if (state3 == 1) {
+    drawFingerTip(x[0], x[2], x[3], x[4], f);
 
   float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
   if (hp <= 0 || edist <= 45) { //HPがなくなったor到着したらおわり
@@ -199,25 +260,6 @@ void draw() {
       }
     }
     myBullets = nextMyBullets;
-    /*
-    //敵の銃リスト更新
-    ArrayList<Bullet> nextEneBullets = new ArrayList<Bullet>();
-    for(Bullet bullet: eneBullets){
-    bullet.update();
-    if(!bullet.isDead){
-    nextEneBullets.add(bullet);
-    }
-    }
-    eneBullets = nextEneBullets;
-    */
-    /*
-    if(mousePressed && mouseButton==RIGHT && state == false && dist(myself.loc.x, myself.loc.y, mouseX, mouseY)>=100) {
-    xx = mouseX;
-    yy = mouseY;
-    state = true;
-    enemies.add(new Enemy(mouseX, mouseY, d)); //右クリックで敵追加
-    }
-    */
 
     //HPと撃墜数の表示
     fill(255);
@@ -247,71 +289,8 @@ void draw() {
 
     stukaEffect.effectPlay();
   }
-  Frame frame = leap.frame();
-  HandList hands = frame.hands();
-  //  iBox = frame.interactionBox();
-  Hand[] hand = new Hand[2];
-  Vector[] palmPos = new Vector[2];
-  float[] x = new float[6];
-  for (int i = 0; i<2; i++) {
-    hand[i] = hands.get(i);
-    palmPos[i] = hand[i].palmPosition();
-  }
-  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) {
-    f = 1;
-  }
-  else {
-    f = 0;
-    fill(122 + aaa / 2);
-    if (hands.count() == 1) {
-      textAlign(CENTER);
-      text("Put Both Hands", w2, h2);
     }
-    else {
-      textAlign(CENTER);
-      text("Put Your Hands", w2, h2);
-    }
-    textAlign(LEFT);
-  }
-  x = fingergap1(hand[0], hand[1]);
-  if (state3 == 0) {
-    if (x[5] == 0.0) {
-      background(0);
-      textSize(50);
-      fill(255, 255, 0, 100 + aaa / 2);
-      text("Put Your Hands", w2, h2);
-      textSize(80);
-      fill(255);
-      text("The World is Nothing", 600, 600);
-    }
-    else if (x[5] == 1.0) {
-      background(0);
-      textSize(80);
-      fill(255);
-      text("Let there be...", 600, 600);
-    }
-    else if (x[5] == 2.0) {
-      if (g1<256) {
-        background(g1);
-        textSize(80);
-        fill(255);
-        textAlign(CENTER);
-        text("Light!!", 600, 600);
-        textAlign(LEFT);
-        g1++;
-      }
-      else if (g1 >= 256 && g1<511) {
-        background(0,0,0,511 - g1);
-        g1++;
-      }
-      else if (g1 == 511) {
-        state3 = 1;
-      }
-    }
-  }
-  else if (state3 == 1) {
-    drawFingerTip(x[0], x[2], x[3], x[4], f);
-  }
+
 }
 
 class Myself { //-------------------------ロケット
@@ -564,7 +543,6 @@ void mouseReleased()
 }
 
 float[] fingergap1(Hand hand1, Hand hand2) {
-  int state2 = 0;
   float[] x = new float[6];
   FingerList[] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
@@ -587,7 +565,7 @@ float[] fingergap1(Hand hand1, Hand hand2) {
   x[2] = tipPos[1].getZ();
   x[3] = dist(tipPos[2].getX(), tipPos[2].getY(), tipPos[2].getZ(), tipPos[3].getX(), tipPos[3].getY(), tipPos[3].getZ());
   if (finger[0].isExtended() == true)   x[4] = 1.0;
-  else                  x[4] = 0.0;
+  else                                  x[4] = 0.0;
   Vector fingertip1 = finger[1].tipPosition();
   if ((fingertip1.getY()>400 && state2 == 0) || (fingertip1.getY() >= 200 && state2 == 1)) {
     x[5] = 1.0;
