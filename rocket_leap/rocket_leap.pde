@@ -15,7 +15,7 @@ Controller leap = new Controller();         // leap という名前で Controlle
 
 int state2 = 0;
 int state3 = 0;
-int f = 0;
+int posi = 0;
 int g1 = 0;
 
 Myself myself;
@@ -33,6 +33,12 @@ float d;
 float xx, yy;
 boolean state = false;
 int ene_number = 0;
+//drawFingerTipで使う変数
+float timestart;
+int state1 = 0;
+boolean statelag=true;
+float n, m;
+
 
 //通信用
 Server s;
@@ -48,9 +54,9 @@ PImage img; //地球
 
 void setup() {
   //  s = new Server(this, 12345); // Start a simple server on a port
-  //  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
+  //  client = new Client(this, "157.82.200.251",12345); //takumi
   client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-                           // client = new Client(this, "157.82.202.205", 10000); //mamii
+  // client = new Client(this, "157.82.202.205", 10000); //mamii
 
   size(1280, 640);
   //  fullScreen(P3D);
@@ -92,7 +98,8 @@ void setup() {
 }
 
 void draw() {
-  aa = aa + da;
+    background(0);
+  aa = aa + da; //色に使うやつ
   aaa = (int)aa;
   if (aa>255 || aa<0) {
     da = -da;
@@ -107,11 +114,12 @@ void draw() {
     hand[i] = hands.get(i);
     palmPos[i] = hand[i].palmPosition();
   }
-  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) {
-    f = 1;
+  
+  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
+    posi = 1;
   }
   else {
-    f = 0;
+    posi = 0;
     fill(122 + aaa / 2);
     if (hands.count() == 1) {
       textAlign(CENTER);
@@ -123,22 +131,26 @@ void draw() {
     }
     textAlign(LEFT);
   }
+
   x = fingergap1(hand[0], hand[1]);
-  if (state3 == 0) {
+  if (state3 == 0) { //初期状態
     if (x[5] == 0.0) {
       background(0);
       textSize(50);
       fill(255, 255, 0, 100 + aaa / 2);
-      text("Put Your Hands", w2, h2);
+      textAlign(CENTER);
+      if(hands.count()==0) text("Put Your Hand", w2, h2+200);
+      if(hands.count()>0) text("Slide Your Hand", w2, h2+200);
       textSize(80);
       fill(255);
-      text("The World is Nothing", 600, 600);
+      text("The World is Nothing", w2, h2);
     }
     else if (x[5] == 1.0) {
       background(0);
       textSize(80);
       fill(255);
       text("Let there be...", 600, 600);
+      textAlign(LEFT);
     }
     else if (x[5] == 2.0) {
       if (g1<256) {
@@ -155,35 +167,34 @@ void draw() {
         g1++;
       }
       else if (g1 == 511) {
-        state3 = 1;
+        state3 = 1; //ゲーム状態へ
       }
     }
   }
-  else if (state3 == 1) {
-    drawFingerTip(x[0], x[2], x[3], x[4], f);
-
-  float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
-  if (hp <= 0 || edist <= 45) { //HPがなくなったor到着したらおわり
-    client.write(6 + "\n");
-    background(0);
-    noStroke();
-    textSize(86);
-    fill(255);
-    if (hp <= 0) text("YOU WIN!!", w2, h2);
-    else text("YOU LOSE...", w2, h2);
-    if (w2 <= mouseX && mouseX <= w2 + 180 && h2 + 20 <= mouseY && mouseY <= h2 + 80) {
-      fill(255, 0, 0);
-    }
-    else {
+  else if (state3 == 1) { //opおわった後
+    drawFingerTip(x[0], x[2], x[3], x[4], posi); //敵生成
+    float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
+    if (hp <= 0 || edist <= 45) { //HPがなくなったor到着したらおわり
+      client.write(6 + "\n");
+      background(0);
+      noStroke();
+      textSize(86);
       fill(255);
-    }
-    rect(w2, h2 + 20, 180, 60);
-    textSize(50);
-    fill(0);
-    text("REPLAY", w2, h2 + 70);
-    if (mousePressed == true && mouseX <= w2 + 180 && mouseY <= h2 + 80 && mouseX >= w2 && mouseY >= h2 + 20) {
-      hp = 1000;
-      hit = 0;
+      if (hp <= 0) text("YOU WIN!!", w2, h2);
+      else text("YOU LOSE...", w2, h2);
+      if (w2 <= mouseX && mouseX <= w2 + 180 && h2 + 20 <= mouseY && mouseY <= h2 + 80) {
+        fill(255, 0, 0);
+      }
+      else {
+        fill(255);
+      }
+      rect(w2, h2 + 20, 180, 60);
+      textSize(50);
+      fill(0);
+      text("REPLAY", w2, h2 + 70);
+      if (mousePressed == true && mouseX <= w2 + 180 && mouseY <= h2 + 80 && mouseX >= w2 && mouseY >= h2 + 20) {
+        hp = 1000;
+        hit = 0;
       //      client.write(2+" "+hit + "\n");
       client.write(3 + "\n"); //向こうにリセットを知らせる
       background(0);
@@ -212,7 +223,6 @@ void draw() {
        //HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
        //      iBox = frame.interactionBox();            // InteractionBox を初期化
 
-    background(0);
     stroke(255);
     noFill();
     //    rect(5, 5, width-5, height-5); 
@@ -486,29 +496,31 @@ class Enemy { //-------------------------------敵
   int coolingTime;
   boolean isDead;
   int number;
+  int enebig; //0:普通、b=1:強い敵
 
-  Enemy(float x, float y, float dis, int ene_number, int big) { //big=0:普通、big=1:強い敵
-    if(big == 0){
-      size = dis;
-    }
-    else {
-      size = dis + aaa/10;
-    }
+  Enemy(float x, float y, float dis, int ene_number, int b) { //b=0:普通、b=1:強い敵
+    size = dis;
     number = ene_number;
     loc = new PVector(x, y);
     isDead = false;
+    enebig=b;
+    if(enebig ==1) println("big set");
     client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10 + 100) + " " + (int)size * 10 + "\n");
     delay(100);
     println(loc.x, loc.y);//個体番号、座標、半径を送信
   }
 
   void display() {
-    fill(255 - aaa, 255, aaa);
+    if(enebig==1) fill(255);
+    else fill(255 - aaa, 255, aaa);
     stroke(255 - aaa, 255, aaa);
     ellipse(loc.x, loc.y, size, size);
   }
 
   void update() {
+    if(enebig == 1){
+      size = size + aa/5; //強い敵は大きさ更新あり
+    }
     for (Bullet b : myBullets) { //あたり判定
       if ((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
         && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)) {
