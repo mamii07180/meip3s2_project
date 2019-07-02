@@ -107,10 +107,14 @@ class Player extends Fighter {
   }
    void update() {
     pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
-    if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){
+    if(pos.z > 3300) pos.z -= 6400;
+    if(pos.z < -3100) pos.z += 6400;
+    if(pos.x > 6400) pos.x -= 12800;
+    if(pos.x < -6400) pos.x += 12800;
+ /*   if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){  //move to center
       pos.x = 0;
       pos.z = 0;
-  }
+  }*/
    }
 }
 //change
@@ -151,14 +155,34 @@ class Effect extends Chara  {
     popMatrix();
   }
 }
+/*
 class Wall extends Chara  {
   PVector loc;
-  Wall(float _x, float _y, float _z, float _radius) {
+  int a;
+  Wall(float _x, float _y, float _z, float _radius,int _a) {
     super(_x, _y, _z, _radius, EFFECT); 
     loc = new PVector(_x,_y,_z);
+    a = _a;
 }
   void drawShape() {
-    
+    switch(a){
+     case 0: 
+       if(player.vel.z < 0) background(map(abs(player.pos.z-loc.z*2),0,1000,220,0 ));
+       break;
+     case 1:
+       if(player.vel.z > 0) background(map(abs(player.pos.z-loc.z*2),0,1000,220,0 ));
+       break;
+     case 2:
+       if(player.vel.x < 0) background(map(abs(player.pos.x-loc.x*2),0,1000,220,0 ));
+       break;
+     case 3:
+       if(player.vel.x > 0) background(map(abs(player.pos.x-loc.x*2),0,1000,220,0 ));
+       break;
+   
+   
+    }
+    //}
+   
     fill(0, 64, 255,map(abs(player.pos.z-loc.z),0,1000,0,40));
     pushMatrix();
     translate(loc.x,loc.y,loc.z);
@@ -171,10 +195,10 @@ class Wall extends Chara  {
     box(1,15000,15000);
     
     }
-    popMatrix();
+    popMatrix(); 
   }
 }
-
+*/
 class Earth extends Chara  {
   PVector loc;
   Earth(float _x, float _y, float _z, float _radius) {
@@ -241,16 +265,18 @@ void setup() {
   //for(int i = 0; i < 15; i++){ //最初に敵を15体作っておく
    // for(Enemy enemy: enemies){
     //  enemy.drawShape();
-    Wall wall1 = new Wall(0,0,-1550,0);
+    /*
+    Wall wall1 = new Wall(0,0,-1550,0,0);
     walllist.add(wall1); 
-    Wall wall2 = new Wall(0,0,1650,0);
+    Wall wall2 = new Wall(0,0,1650,0,1);
     walllist.add(wall2);
-    Wall wall3 = new Wall(-3200,0,0,1);
+    Wall wall3 = new Wall(-3200,0,0,0,2);
     walllist.add(wall3);
-    Wall wall4 = new Wall(3200,0,0,1);
+    Wall wall4 = new Wall(3200,0,0,0,3);
     walllist.add(wall4);
-    //Enemy enemy1 = new Enemy(0,0,-1000,30,4);
-    //enemies.add(enemy1);
+    */
+  //  Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+   // enemies.add(enemy1);
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -270,10 +296,14 @@ sphere.setStrokeWeight(0);
 int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
- // println(player.pos.x,player.pos.z);
+  //println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
-  background(0);
+  /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
+  else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
+  else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
+  else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
+  else */background(0);
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
@@ -355,10 +385,10 @@ void draw(){
     effect.draw();
     if(effect.life<=0) effectList.remove(i--); // 寿命で消滅
   }
-  for (int i=0;i<walllist.size();i++) {
+  /*for (int i=0;i<walllist.size();i++) {
     Wall wall = (Wall) walllist.get(i);
     wall.draw();
-  }
+  }*/
   if(earth_e == 1){
     Earth earth = (Earth) earthlist.get(0);
     earth.draw();
@@ -432,7 +462,7 @@ void draw(){
       text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
     }   else {
       //text("" + goaldis + " m", width/2, 30);
-      text("" + player.pos.x + " " + int(player.pos.z-50), width/2, 30);
+      text("" + player.pos.x + " " + player.pos.z, width/2, 30);
       textAlign(RIGHT, CENTER);
       text("life " + nf(player.life, 1, 0), width/3, height-30);
       rectMode(CORNER);
@@ -503,10 +533,10 @@ void input(){
          //腕を両方あげるとスピードアップ(減速は保留）)
        
         
-         if(InputLeft>0 && InputRight>0 && sp < 1000)
+         if(InputLeft>0 && InputRight>0 && sp < 800)
         {
           player.accel(0.01);
-        } else if(sp > 500){
+        } else if(sp > 200){
          player.vel.mult(0.99);
          }
          
