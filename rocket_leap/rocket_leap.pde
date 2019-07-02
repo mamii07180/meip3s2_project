@@ -12,14 +12,22 @@ import processing.net.*;
 Controller leap = new Controller();         // leap という名前で Controller オブジェクトを宣言
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
-int state1=0;
-int state2=0;
-int state3=0;
+int state4=0;
+int state5=0;
 int f=0;
 int g1=0;
+float g2=0.0;
+int Re=0;
 float n, m;
+float distanceReplay=0.0;
 float timestart=0.0;
 float timefinish=0.0;
+float timeRestart=0.0;
+float timeRefinish=0.0;
+
+int state2 = 0;
+int state3 = 0;
+int posi = 0;
 
 Myself myself;
 Earth earth;
@@ -28,14 +36,18 @@ ArrayList<Bullet> myBullets;
 ArrayList<Bullet> eneBullets; //相手の弾（今回はいらない）
 int hp=1000;
 int hit=0;
-int aaa=1;
+float aaa=1;
+int aa;
 int da=1;
 int resizeX, resizeY;
 float w2, h2; //画面の半分サイズ（よく使うので）
 float d;
 float xx, yy;
-boolean state=false;
-int ene_number=0;
+boolean state = false;
+int ene_number = 0;
+//drawFingerTipで使う変数
+boolean statelag=true;
+
 
 //通信用
 Server s;
@@ -49,18 +61,16 @@ ImgList imgList;
 StukaEffect stukaEffect;
 PImage img; //地球
 
-void setup(){
-//  s = new Server(this, 12345); // Start a simple server on a port
-//  client = new Client(this, "157.82.200.251",12345); // Start a simple server on a port
+void setup() {
+  //  s = new Server(this, 12345); // Start a simple server on a port
+  //  client = new Client(this, "157.82.200.251",12345); //takumi
   client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-// client = new Client(this, "157.82.202.205", 10000);
-  
-  size(1280,640);
-//  fullScreen(P3D);
-  resizeX = (int)width/250;
-  resizeY = (int)height/100;
-  w2 = width/2;
-  h2 = height/2;
+  // client = new Client(this, "157.82.202.205", 10000); //mamii
+
+  size(1280, 640);
+  //  fullScreen(P3D);
+  w2 = width / 2;
+  h2 = height / 2;
 
   myself = new Myself();
   enemies = new ArrayList<Enemy>();
@@ -75,7 +85,7 @@ void setup(){
       ene_r = (15+random(30))*2;
       if (abs(w2 - ene_x) > 40 + ene_r && abs(height - 30 - ene_y) > 40 + ene_r) break;
     }
-    enemies.add(new Enemy(ene_x, ene_y, ene_r, ene_number)); //0,0なら適当に半径生成される(classに記載)
+    enemies.add(new Enemy(ene_x, ene_y, ene_r, ene_number, 0)); //0,0なら適当に半径生成される(classに記載)
   }
   //敵のリスト更新
   ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -97,7 +107,84 @@ void setup(){
 }
 
 void draw() {
-  float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
+    background(0);
+  aa = aa + da; //色に使うやつ
+  aaa = (int)aa;
+  if (aa>255 || aa<0) {
+    da = -da;
+    aa = aa + da;
+  }
+  Frame frame = leap.frame();
+  HandList hands = frame.hands();
+//  iBox = frame.interactionBox();
+  Hand[] hand = new Hand[2];
+  Vector[] palmPos = new Vector[2];
+  float[] x= new float[6];
+  for(int i = 0; i<2; i++)  {
+    hand[i]=hands.get(i);
+    palmPos[i]=hand[i].palmPosition();
+  }
+  
+  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
+    posi = 1;
+  }
+  else {
+    posi = 0;
+    fill(122 + aaa / 2);
+    if (hands.count() == 1) {
+      textAlign(CENTER);
+      text("Put Both Hands", w2, h2);
+    }
+    else {
+      textAlign(CENTER);
+      text("Put Your Hands", w2, h2);
+    }
+    textAlign(LEFT);
+  }
+
+  x = fingergap1(hand[0], hand[1]);
+  if (state3 == 0) { //初期状態
+    if (x[5] == 0.0) {
+      background(0);
+      textSize(50);
+      fill(255, 255, 0, 100 + aaa / 2);
+      textAlign(CENTER);
+      if(hands.count()==0) text("Put Your Hand", w2, h2+200);
+      if(hands.count()>0) text("Slide Your Hand", w2, h2+200);
+      textSize(80);
+      fill(255);
+      text("The World is Nothing", w2, h2);
+    }
+    else if (x[5] == 1.0) {
+      background(0);
+      textSize(80);
+      fill(255);
+      text("Let there be...", 600, 600);
+      textAlign(LEFT);
+    }
+    else if (x[5] == 2.0) {
+      if (g1<256) {
+        background(g1);
+        textSize(80);
+        fill(255);
+        textAlign(CENTER);
+        text("Light!!", 600, 600);
+        textAlign(LEFT);
+        g1++;
+      }
+      else if (g1 >= 256 && g1<511) {
+        background(511 - g1);
+        g1++;
+      }
+      else if (g1 == 511) {
+        state3 = 1; //ゲーム状態へ
+      }
+    }
+  }
+  else if (state3 == 1) { //opおわった後
+    drawFingerTip(x[0], x[2], x[3], x[4], posi); //敵生成
+    float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
+
   if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
     client.write(6 +"\n"); 
     background(0);
@@ -115,7 +202,8 @@ void draw() {
     textSize(50);
     fill(0);
     text("REPLAY", w2, h2+70);
-    if ( mousePressed == true && mouseX<=w2+180&&mouseY<=h2+80&&mouseX>=w2&&mouseY>=h2+20) {
+    g2=fingerReplay(x[0],x[2],x[4],Re,w2,h2);
+    if (g2==1.0) {
       hp = 1000;
       hit = 0;
       //      client.write(2+" "+hit + "\n");
@@ -136,7 +224,7 @@ void draw() {
         enemies = nextEnemies;
         //    if(random(1) < 0.02){ //更新100回に2回の割合で敵作製
         ene_number=ene_number+1;
-        enemies.add(new Enemy(0, 0, (15+random(10))*2, ene_number));
+        enemies.add(new Enemy(0, 0, (15+random(10))*2, ene_number,0));
         //    }
       }
     }
@@ -145,7 +233,6 @@ void draw() {
     //HandList hands = frame.hands();           // HandList オブジェクトを宣言し、frame 内の手（複数）の情報を取得
     //      iBox = frame.interactionBox();            // InteractionBox を初期化
 
-    background(0);
     stroke(255);
     noFill();
     //    rect(5, 5, width-5, height-5); 
@@ -239,54 +326,10 @@ void draw() {
     text("y:", width-160, 105);
 
     stukaEffect.effectPlay();
-  }
-  Frame frame = leap.frame();
-  HandList hands = frame.hands();
-//  iBox = frame.interactionBox();
-  Hand[] hand = new Hand[2];
-  Vector[] palmPos = new Vector[2];
-  float[] x= new float[6];
-  for(int i = 0; i<2; i++)  {
-    hand[i]=hands.get(i);
-    palmPos[i]=hand[i].palmPosition();
-  }
-  if(palmPos[0].getX()>palmPos[1].getX()&&hands.count()==2){
-  f=1;
-  }
-  else{
-  f=0;
-  }
-  x = fingergap1(hand[0],hand[1]);
-  if(state3==0){
-  if(x[5]==0.0){
-    background(0);
-    textSize(80);
-    fill(255);
-    text("The World is Nothing",600,600);
-  }else if(x[5]==1.0){
-    background(0);
-    textSize(80);
-    fill(255);
-    text("Let there be...",600,600);
-  }else if(x[5]==2.0){
-    if(g1<256){
-    background(g1);
-    textSize(80);
-    fill(255);
-    text("Light!!",600,600);
-    g1++;
-    }else if(g1>=256&&g1<511){
-     background(511-g1);
-     g1++;
-    }else if(g1==511){
-    state3=1;
-    }
-  }
-  }else if(state3==1){
-  drawFingerTip(x[0],x[2],x[3],x[4],f);
+  }  
   }
 }
-
+/*
 void drawFingerTip(float a, float b, float d, float e, int f) {
   float fx, fy, x, y; //指の位置
   fx = resizeX*a;
@@ -405,8 +448,8 @@ void drawFingerTip(float a, float b, float d, float e, int f) {
    text(fx, 0, height-100); //-250~250がよさそう
    textSize(56);
    text(fy, 0, height-50); //-250~250がよさそう
-   */
-}
+   
+}*/
 
 class Myself { //-------------------------ロケット
 
@@ -597,8 +640,9 @@ class Enemy { //-------------------------------敵
   int coolingTime;
   boolean isDead;
   int number;
+  int enebig; //0:普通、b=1:強い敵
 
-  Enemy(float x, float y, float dis, int ene_number) {
+  Enemy(float x, float y, float dis, int ene_number, int b) { //b=0:普通、b=1:強い敵
     size = dis;
     number = ene_number;
     //  Enemy(){
@@ -611,40 +655,25 @@ class Enemy { //-------------------------------敵
     //    vel = 3;
     //    coolingTime = int(random(60));
     isDead = false;
-/*    client.write(2+" "+number+" "+(int)loc.x+"\n");  //個体番号、座標、半径を送信
-    client.write(5+" "+(int)loc.y+" "+size+"\n");  //個体番号、座標、半径を送信*/
-    client.write(2+" "+number+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10 + 100) +" "+(int)size*10+"\n"); 
+    enebig=b;
+    if(enebig ==1) println("big set");
+    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10 + 100) + " " + (int)size * 10 + "\n");
     delay(100);
     println(loc.x,loc.y);//個体番号、座標、半径を送信
   }
 
   void display() {
-    //    fill(206,117,48);
-    aaa=aaa+da;
-    if (aaa>255) {
-      aaa=255;
-      da = -1;
-    }
-    if (aaa<0) {
-      aaa=0;
-      da = 1;
-    }
-    fill(255-aaa, 255, aaa);
-    stroke(255-aaa, 255, aaa);
+    if(enebig==1) fill(255);
+    else fill(255 - aaa, 255, aaa);
+    stroke(255 - aaa, 255, aaa);
     ellipse(loc.x, loc.y, size, size);
     //rect(loc.x, loc.y, size, size);
   }
 
   void update() {
-    //    loc.y = vel;
-    if (loc.y > height) {
-      isDead = true;
+    if(enebig == 1){
+      size = size + aa/5; //強い敵は大きさ更新あり
     }
-    //    coolingTime++;
-    //    if(coolingTime >= 60){
-    //      eneBullets.add(new Bullet(this));
-    //      coolingTime = 0;
-    //    }
     for (Bullet b : myBullets) { //あたり判定
       if ((loc.x - size / 2 <= b.loc.x && b.loc.x <= loc.x + size / 2)
         && (loc.y - size / 2 <= b.loc.y && b.loc.y <= loc.y + size / 2)) {
@@ -755,4 +784,60 @@ float gap(float x, float y, float z) {
   float a;
   a = sqrt(x*x+y*y+z*z);
   return a;
+}
+
+float fingerReplay(float a,float b,float e,int Re,float w2,float h2){
+float fx, fy, x, y; //指の位置
+  fx = resizeX*a;
+  fy = resizeY*b;
+  x=fx+ w2; //左上が原点
+  y=fy+ h2;
+  if(w2<x&&x<w2+180&&h2+20<y&&y<h2+80){
+     distanceReplay=1.0;
+  }else{
+    distanceReplay=0.0;
+  }
+  if(distanceReplay==1.0){
+    if(e==1.0&state4==0){
+      stroke(255,0,0);
+      strokeWeight(5);
+      line(x, y+16, x, y-16);    //撃つ方向
+      line(x-16, y, x+16, y);    //撃つ方向
+      timeRestart=millis();
+      state4=1;
+      return 0.0;
+    }else if(e==1.0&&state4==1){
+      stroke(0,255,0);
+      strokeWeight(5);
+      line(x, y+16, x, y-16);    //撃つ方向
+      line(x-16, y, x+16, y);    //撃つ方向
+      timeRefinish=millis();
+      if(timeRefinish-timeRestart>2000){
+        timeRestart=0.0;
+        timeRefinish=0.0;
+        state4=0;
+        return 1.0;
+      }else{
+        return 0.0;
+      }
+    }else{
+      stroke(255,0,0);
+      strokeWeight(5);
+      line(x, y+16, x, y-16);    //撃つ方向
+      line(x-16, y, x+16, y);    //撃つ方向
+      timeRestart=0.0;
+      timeRefinish=0.0;
+      state4=0;
+      return 0.0;
+    }
+  }else{
+    stroke(0,0,255);
+    strokeWeight(5);
+    line(x, y+16, x, y-16);    //撃つ方向
+    line(x-16, y, x+16, y);    //撃つ方向
+    timeRestart=0.0;
+    timeRefinish=0.0;
+    state4=0;
+    return 0.0;
+  }
 }
