@@ -1,4 +1,6 @@
 float timelag=0;
+int state1=0;
+
 void drawFingerTip(float a, float b, float d, float e, int posi) {
   float fx, fy, x, y; //指の位置
   boolean big = false;
