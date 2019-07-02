@@ -20,7 +20,6 @@ int state5=0;
 int f=0;
 int g1=0;
 float g2=0.0;
-int g3=0;
 int Re=0;
 float n, m;
 float distanceReplay=0.0;
@@ -153,10 +152,6 @@ void draw() {
     }
   }
   }else if(state3==1){ 
-    if(g3==0){
-      hp=0;
-      g3=1;
-    }
   if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
     client.write(6 +"\n"); 
     background(0);
