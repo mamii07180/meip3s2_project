@@ -57,7 +57,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
         else {
           switch(state1){ //state1で指の状態遷移
             case 0 :
-              if(timelag>5000&&timelag<5005){
+              if(timelag>5000&&timelag<5500){
                 big =true;
                 ellipse(x, y, rchange, rchange);
                 rchange++;
