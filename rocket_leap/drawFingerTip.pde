@@ -85,8 +85,10 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
                 if (big) { //big=trueなら
                   println("big OK");
                   enemies.add(new Enemy(n, m, d, ene_number, 1)); //dは指の間の距離
+                  enecountb++;
                 } else {
                   enemies.add(new Enemy(n, m, d, ene_number, 0));
+                  enecount++;
                 }
                 int dead_ene_num = ene_number - 15;
                 Enemy dead = enemies.get(dead_ene_num);
