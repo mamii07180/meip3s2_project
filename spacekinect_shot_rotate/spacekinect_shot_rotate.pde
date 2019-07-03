@@ -17,7 +17,7 @@ int earth_e = 0;
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
-Player player = new Player(0, 0, 100, 10);
+Player player = new Player(0, 0, 0, 10);
 int earth_x; int earth_z;// プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
@@ -206,8 +206,9 @@ class Earth extends Chara  {
     loc = new PVector(_x,_y,_z);
 }
   void drawShape() {
+   println(loc.x/2,0,loc.z/2);
    pushMatrix();
-   translate(loc.x,0,loc.z);//地球のkinect座標系に変換されたx,z座標が送られてくる
+   translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect座標系に変換されたx,z座標が送られてくる
    shape(sphere);
    popMatrix();
   
@@ -237,7 +238,7 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(loc.x,loc.z);
+    translate(loc.x+75*sin(radians(theta)),0,loc.z-75*cos(radians(theta)));
     sphere(size);
     popMatrix();
   }
@@ -275,8 +276,13 @@ void setup() {
     Wall wall4 = new Wall(3200,0,0,0,3);
     walllist.add(wall4);
     */
-   Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+  /* Enemy enemy1 = new Enemy(0,0,-1500,3,4);
     enemies.add(enemy1);
+    Enemy enemy2 = new Enemy(0,0,-1200,2,4);
+    enemies.add(enemy2);
+  */  Enemy enemy3= new Enemy(0,0,-500,1,4);
+    enemies.add(enemy3);
+  
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -296,7 +302,7 @@ sphere.setStrokeWeight(0);
 int drawcounter = 0;
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  //println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
+  println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
   if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
@@ -341,7 +347,7 @@ void draw(){
     }
    if(data[0] == 6){
       println(data[0],data[1],data[2]);
-      Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
+      Earth earth = new Earth(data[1],0,data[2],0);
       earthlist.add(earth);
       earth_e = 1;
       earth_x = data[1];
@@ -350,7 +356,7 @@ void draw(){
     // Draw line using received coords
   }
   int x_send=int(player.pos.x/10);
-  int y_send=int(player.pos.z/10 -10);
+  int y_send=int(player.pos.z/10);
   if(shoot==1){
   int theta_send=int(theta);
   s.write(1 + " " + theta_send + " " +  "\n");
@@ -450,7 +456,7 @@ void draw(){
   
   if(player.life>0 ) {
     if(earth_e == 1){
-    float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
+    float goaldis = player.pos.dist(new PVector(earth_x,1000,earth_z));
     if(goaldis<20) {
       background(0); 
       player.vel.x = 0;  player.vel.z = 0; 
@@ -508,6 +514,14 @@ void drawDiamond(float x,float y,float r,float theta_d)
 float theta=0;
 // 毎フレームの入力//////////////////////////////////////////////////////////////////////////////////
 void input(){
+
+  if(player.life>0) {
+    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);
+    else player.vel.mult(0.98);
+     if(keyPressed && key=='w') player.pos.z = 0;
+  }
+
+
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
     //individual JOINTS
