@@ -34,12 +34,13 @@ int hp,hit;
 float aaa=1;
 int aa;
 int da=5;
-int resizeX, resizeY;
 float w2, h2; //画面の半分サイズ（よく使うので）
 float d;
 float xx, yy;
 //boolean state = false;
 int ene_number = 0;
+int enecount;
+int enecountb;
 
 //通信用
 Server s;
@@ -161,11 +162,40 @@ void draw() {
     float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
     if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
       client.write(6 +"\n"); 
+      //message
       noStroke();
       textSize(86);
       fill(255);
-      if ( hp<=0 ) text("YOU WIN!!", w2, h2);
-      else text("GAME OVER !!", w2, h2);
+      if ( hp<=0 ) {
+        text("YOU WIN!!", 30, 100);
+        textSize(55);
+        text("The Earth was saved.", 30, 130);
+      }
+      else text("GAME OVER !!", 30, 100);
+      //data
+      text("HIT : ", 30, h2);
+      fill(0,255,0);
+      text(hit, 60, h2);
+      fill(255);
+      text("HP : ", 30, h2+50);
+      fill(0,255,0);
+      text(hp, 60, h2+50);
+      fill(255);
+      text("Distance of Rocket-Earth : ", 30, h2+100);
+      fill(0,255,0);
+      text(edist, 60, h2+100);
+      fill(255);
+      text("You made ", 30, h2+150);
+      fill(0,255,0);
+      text(enecount, 60, h2+150);
+      fill(255);
+      text("stars.", 120, h2+150);
+      textSize(30);
+      fill(0,255,0);
+      text(enecountb, 30, h2+200);
+      fill(255);
+      text("stars were Special.", 60, h2+200);
+      //replay-box
       if (w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) fill(255, 0, 0);
       else  fill(255);
       rect(w2, h2+20, 180, 60);
@@ -563,6 +593,7 @@ void mouseReleased()
 }
 
 float[] fingergap1(Hand hand1,Hand hand2){
+
   float[] x=new float[6];
   FingerList [] fingers = new FingerList[2];
   Finger[]  finger = new Finger[4];
@@ -615,6 +646,8 @@ float gap(float x, float y, float z) {
 
 float fingerReplay(float a,float b,float e,int Re,float w2,float h2){
   float fx, fy, x, y; //指の位置
+  int resizeX =(int)width/250 ;
+  int resizeY=(int)height/100;
   fx = resizeX*a;
   fy = resizeY*b;
   x=fx+ w2; //左上が原点
