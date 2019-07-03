@@ -57,11 +57,8 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
         else {
           switch(state1){ //state1で指の状態遷移
             case 0 :
-              if(timelag>5000&&timelag<5500){
+              if(timelag>5000){
                 big =true;
-                ellipse(x, y, rchange, rchange);
-                rchange++;
-                println("time");
               }
               if (e==1.0) {
                 state1=1;
@@ -110,7 +107,14 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
               }
               break;
           } 
-          if(big) stroke(255, aaa, 0);
+          if(big) {
+            stroke(255, aaa, 0);
+            if(timelag<5500){
+                ellipse(x, y, rchange, rchange);
+                rchange = rchange + 2;
+                println("time");
+            }
+          }
           else  stroke(255 - aaa, 255, aaa);
           strokeWeight(5);
           line(x, y + 16, x, y - 16);    //撃つ方向
@@ -125,6 +129,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
         arc( x, y, 100, 100, PI/2, rad+PI/2);
       }
     }
+        println(big);
   }
   else { //positionよくなかったら
     fx = 0;

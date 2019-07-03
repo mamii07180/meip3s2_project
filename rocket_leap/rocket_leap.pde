@@ -468,7 +468,7 @@ class Enemy { //-------------------------------敵
     isDead = false;
     enebig=b;
     if(enebig ==1) println("big"+ size);
-    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10 + 100) + " " + (int)size * 10 + "\n");
+    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10 + 100) + " " + (int)size * 10 + " " + enebig + "\n");
     delay(100);
     println(loc.x,loc.y);//個体番号、座標、半径を送信
   }
