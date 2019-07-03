@@ -2,6 +2,8 @@ void replace() {
       hp = 1000;
       hit = 0;
       ene_number = 0;
+      enecount = 0;
+      enecountb = 0;
       for (Enemy enemy : enemies){ //まず全ての敵を消去
         enemy.isDead = true;
         client.write(4 + " " + enemy.number + " " + 0 + "\n"); //死滅個体
