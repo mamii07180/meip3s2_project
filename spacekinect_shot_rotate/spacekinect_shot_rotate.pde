@@ -237,7 +237,7 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(loc.x/2,loc.z/2);
+    translate(loc.x,loc.z);
     sphere(size);
     popMatrix();
   }
@@ -275,8 +275,8 @@ void setup() {
     Wall wall4 = new Wall(3200,0,0,0,3);
     walllist.add(wall4);
     */
-  //  Enemy enemy1 = new Enemy(0,0,-1000,30,4);
-   // enemies.add(enemy1);
+   Enemy enemy1 = new Enemy(0,0,-1000,30,4);
+    enemies.add(enemy1);
    // }
   //敵のリスト更新
   //  ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
@@ -299,11 +299,11 @@ void draw(){
   //println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
   //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
   sp = player.vel.dist(new PVector(0,0,0));
-  /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
+  if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
   else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
   else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
   else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
-  else */background(0);
+  else background(0);
   //change
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
   
