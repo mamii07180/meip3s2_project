@@ -17,7 +17,7 @@ int earth_e = 0;
 //stop
 // 変数定義
 int PLAYER = 0, ENEMY = 1, EFFECT = 2;      // group定数(enum…)
-Player player = new Player(0, 0, 100, 10);
+Player player = new Player(0, 0, 0, 10);
 int earth_x; int earth_z;// プレイヤー
 ArrayList fighterList = new ArrayList();    // 戦闘機リスト（プレイヤー含む）
 ArrayList bulletList = new ArrayList();     // 弾リスト
@@ -30,6 +30,18 @@ float cameraShake = 0.0;                    // 現在のカメラの揺れ具合
 int clearMillis = 0;                        // クリアタイム
 PImage img;
 PShape sphere;
+int gameState=0;//ゲーム状態。データが送られ始めると1にする。
+float startTime=-1000;//向こうからデータが送られ始めたとき（data[0]=1が何かしらの手違いで送られなかったときにはじまらないので改善したい）
+
+
+
+//スタート用
+final int start_num =1000;//最初の星の数。定数
+int[] distance;
+float[] angle;
+
+int r ;
+
 
 // 3D空間に配置する基本オブジェクトクラス
 class Chara {
@@ -207,7 +219,7 @@ class Earth extends Chara  {
 }
   void drawShape() {
    pushMatrix();
-   translate(loc.x,0,loc.z);//地球のkinect座標系に変換されたx,z座標が送られてくる
+   translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect75座標系に変換されたx,z座標が送られてくる
    shape(sphere);
    popMatrix();
   
@@ -237,7 +249,7 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(loc.x/2,loc.z/2);
+    translate(loc.x/2+75*sin(radians(theta)),loc.z/2-75*cos(radians(theta)));
     sphere(size);
     popMatrix();
   }
@@ -287,204 +299,284 @@ void setup() {
     //  enemies.add(new Enemy(0,0,0,random(25)*2,i));
  // }
   //textFont( createFont("Lucida Console", 20) );
-
-img = loadImage("earth.jpg");
-sphere=createShape(SPHERE,100);
-sphere.setTexture(img);
-sphere.setStrokeWeight(0);
-}
+  //地球用
+  img = loadImage("earth.jpg");
+  sphere=createShape(SPHERE,100);
+  sphere.setTexture(img);
+  sphere.setStrokeWeight(0);
+  //スタート用
+  distance=new int[start_num];
+  angle=new float[start_num];
+  
+  for(int i =0;i<start_num;i++)
+  {
+  distance[i]=int(random(width/2)*sqrt(2));
+  angle[i]=random(100);//0から100までのfloat
+  }
+  
+  }
 int drawcounter = 0;
+
+
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  //println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
-  //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
-  sp = player.vel.dist(new PVector(0,0,0));
-  /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
-  else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
-  else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
-  else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
-  else */background(0);
-  //change
-  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-  
-  c=s.available();
-  if(c != null) {
-    input = c.readString();
-    input = input.substring(0, input.indexOf("\n")); // Only up to the newline
-    data = int(split(input, ' ')); 
-    // Split values into an array
-    //generate obstacle
-    if(data[0] ==2){
-      println(data[0],data[1],data[2],data[3],data[4]);
-     enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
-     if(data[1]==15)player.accel(5);  //starting accel
-    } 
-    //reset
-    if(data[0] ==3){
-       player.pos.x = 0;
-       player.pos.z = 100;
-       player.vel.x = 0;
-       player.vel.z = 0;
-    } 
-    // delete obstacle
-    if(data[0] ==4){
-      println(data[0],data[1]);
-      for(Enemy enemy: enemies){
-        if(enemy.index ==  data[1]){
-           enemy.isDead = true;
-           addExplosionEffect(enemy);
-        }
-    }
-    if(data[2] == 1){
-      player.life -= 10;
-    }
-    }
-   if(data[0] == 6){
-      println(data[0],data[1],data[2]);
-      Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
-      earthlist.add(earth);
-      earth_e = 1;
-      earth_x = data[1];
-      earth_z = data[2];
-   }
-    // Draw line using received coords
-  }
-  int x_send=int(player.pos.x/10);
-  int y_send=int(player.pos.z/10 -10);
-  if(shoot==1){
-  int theta_send=int(theta);
-  s.write(1 + " " + theta_send + " " +  "\n");
-  delay(50);
-  shoot = 0;
-  } else if(drawcounter%3==0){//弾をうっていない時のみ座標を送る
-  s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  
-  delay(10);
-  }
-  //0:serve (x,y)
-  //stop
-  // 宇宙背景、塵
-  setLights();
-  setPlayerCamera();
-  drawStars();
-
-  // プレイヤーと敵
-  for (int i=0;i<fighterList.size();i++) {
-    Fighter chara = (Fighter) fighterList.get(i);
-    chara.draw();
-  }
-  for(int i=0;i<enemies.size();i++) {
-    Enemy chara = (Enemy) enemies.get(i);
-    if(chara.isDead == false){
-    chara.draw();
-    }
-  }
-  // エフェクト
-  noLights();
-  for (int i=0;i<effectList.size();i++) {
-    Effect effect = (Effect) effectList.get(i);
-    effect.draw();
-    if(effect.life<=0) effectList.remove(i--); // 寿命で消滅
-  }
-  /*for (int i=0;i<walllist.size();i++) {
-    Wall wall = (Wall) walllist.get(i);
-    wall.draw();
-  }*/
-  if(earth_e == 1){
-    Earth earth = (Earth) earthlist.get(0);
-    earth.draw();
-  }
-  //change
-   for (int i = 0; i < skeletonArray.size(); i++) {
-
-    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-
-    if (skeleton.isTracked()) {
-
-      KJoint[] joints = skeleton.getJoints();
-
-     
-     int j = joints[KinectPV2.JointType_HandRight].getState();
-     if(j ==  KinectPV2.HandState_Open & bu > 60) {
-           println("shoot");
-           player.shoot(30, 1);
-           shoot = 1;
-           //intじゃないとエラー？
-           bu = 0;
-     } 
-     
-    }
-
-  }
-  bu += 1;
-  //stop
-  
-  // 弾
-  for (int i=0;i<bulletList.size();i++) {
-    Bullet bullet = (Bullet) bulletList.get(i);
-    bullet.draw();
-    for (int j=0;j<fighterList.size();j++) {
-      Fighter fighter = (Fighter) fighterList.get(j);
-      if(bullet.isHit(fighter)) {  // 弾が当たったらダメージ
-        if(fighter==player) cameraShake += bullet.power * 0.5;  // プレイヤーがダメージを受けた場合は大きめに揺らす
-        if(fighter.damage(bullet.power)) {
-          fighterList.remove(j--);      // ライフが尽きているので削除
-          addExplosionEffect(fighter);  // 爆発エフェクト
-          cameraShake += 1.0;           // カメラを少し揺らす
-        }
-        bullet.life = 0;
-        break;
+//println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
+    //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
+    sp = player.vel.dist(new PVector(0,0,0));
+    /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
+    else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
+    else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
+    else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
+    else */background(0);
+    //change
+    ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
+    float t = millis() / 1000.0;
+    background(0,0,0,125);
+    c=s.available();
+    if(c != null) 
+    {
+      input = c.readString();
+      input = input.substring(0, input.indexOf("\n")); // Only up to the newline
+      data = int(split(input, ' ')); 
+      // Split values into an array
+      //generate obstacle
+      if(data[0] ==2)
+      {
+         println(data[0],data[1],data[2],data[3],data[4]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         if(data[1]==1)
+         {
+           gameState+=1;
+           startTime=millis() / 1000.0;
+         }
+         if(data[1]==15)player.accel(5);  //starting accel
       }
     }
-    if(bullet.life<=0) bulletList.remove(i--); // 寿命で消滅
-  }
   
-  // 情報表示
-  camera();
-  noLights();
-  textMode(SCREEN); textSize(20); textAlign(CENTER, TOP);
-  if(player.life>30) fill(0, 255, 0, 128);
-  else fill(255, 0, 0, 128);
-  //gameover
-  input();
-  cameraShake *= 0.95;
-  
-  if(player.life>0 ) {
-    if(earth_e == 1){
-    float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
-    if(goaldis<20) {
-      background(0); 
-      player.vel.x = 0;  player.vel.z = 0; 
-      fill(255, 128);
-      textSize(60);
-      text("MISSION CLEAR", width/2, height/2 - 40);
+    if(gameState==0)
+    {
+      fill(0,255,0,127);
+      textSize(100);
+      text("Waiting…", width * 0.6, height * 0.8);
+      for(int i =0;i<start_num;i++)
+      {
+        angle[i] += 0.01;
+        fill(0,255,0,127);
+        stroke(0,255,0);
+        ellipse(
+            distance[i] * cos(angle[i]) + width/2,
+            distance[i] * sin(angle[i]) + height/2,
+            0.5, 
+            0.5);
+        }
+    }
+    if(gameState==1 && t-startTime<=5)
+    {      
+      int L=10000;
+      for(int i=0;i<start_num;i++)
+      {
+        distance[i] += 5;
+        L=+100;
+        stroke(0,255,0,127);
+        strokeWeight(2);
+        noFill();
+        line(
+            distance[i] * cos(angle[i]) + width/2,
+            distance[i] * sin(angle[i]) + height/2,
+            (distance[i]+L) * cos(angle[i]) + width/2,
+            (distance[i]+L) * sin(angle[i]) + height/2);
+        }
+    }
+    else
+      {     
+        c=s.available();
+        if(c != null) 
+        {
+          input = c.readString();
+          input = input.substring(0, input.indexOf("\n")); // Only up to the newline
+          data = int(split(input, ' ')); 
+          // Split values into an array
+          //generate obstacle
+          //reset
+          if(data[0] ==3)
+          {
+             player.pos.x = 0;
+             player.pos.z = 100;
+             player.vel.x = 0;
+             player.vel.z = 0;
+          } 
+          // delete obstacle
+          if(data[0] ==4)
+          {
+            println(data[0],data[1]);
+            for(Enemy enemy: enemies)
+            {
+              if(enemy.index ==  data[1])
+              {
+                 enemy.isDead = true;
+                 addExplosionEffect(enemy);
+              }
+            }
+            if(data[2] == 1)
+            {
+              player.life -= 10;
+            }
+          }
+         if(data[0] == 6)
+         {
+            println(data[0],data[1],data[2]);
+            Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
+            earthlist.add(earth);
+            earth_e = 1;
+            earth_x = data[1];
+            earth_z = data[2];
+         }
+          // Draw line using received coords
+        }
+        int x_send=int(player.pos.x/10);
+        int y_send=int(player.pos.z/10);
+        if(shoot==1)
+        {
+          int theta_send=int(theta);
+          s.write(1 + " " + theta_send + " " +  "\n");
+          delay(50);
+          shoot = 0;
+        }
+        else if(drawcounter%3==0)
+        {//弾をうっていない時のみ座標を送る
+        s.write(0 + " " + x_send + " " + y_send + " " +  "\n");  
+        delay(10);
+        }
+        //0:serve (x,y)
+        //stop
+        // 宇宙背景、塵
+        setLights();
+        setPlayerCamera();
+        drawStars();
       
-      if(clearMillis==0) clearMillis = millis();
-      text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
-    }   else {
-      //text("" + goaldis + " m", width/2, 30);
-      text("" + player.pos.x + " " + player.pos.z, width/2, 30);
-      textAlign(RIGHT, CENTER);
-      text("life " + nf(player.life, 1, 0), width/3, height-30);
-      rectMode(CORNER);
-      noStroke();
-      rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
-    }
-    }
-  } else {
-     textSize(60);
-     text("GAME OVER", width/2, height/2);
-     player.vel.x = 0;  player.vel.z = 0;
-  } 
-  //機体の向き表現用
-  stroke(0,200,0);
-  drawDiamond(0.9*width,0.9*height,60,theta);
-  //stroke(0,0,200);
-  
-  //機体の傾き表現用
- 
-   
-  drawcounter++;
-  
+        // プレイヤーと敵
+        for (int i=0;i<fighterList.size();i++) {
+          Fighter chara = (Fighter) fighterList.get(i);
+          chara.draw();
+        }
+        for(int i=0;i<enemies.size();i++) {
+          Enemy chara = (Enemy) enemies.get(i);
+          if(chara.isDead == false){
+          chara.draw();
+          }
+        }
+        // エフェクト
+        noLights();
+        for (int i=0;i<effectList.size();i++) {
+          Effect effect = (Effect) effectList.get(i);
+          effect.draw();
+          if(effect.life<=0) effectList.remove(i--); // 寿命で消滅
+        }
+        /*for (int i=0;i<walllist.size();i++) {
+          Wall wall = (Wall) walllist.get(i);
+          wall.draw();
+        }*/
+        if(earth_e == 1){
+          Earth earth = (Earth) earthlist.get(0);
+          earth.draw();
+        }
+        //change
+         for (int i = 0; i < skeletonArray.size(); i++) 
+         {
+            KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+            if (skeleton.isTracked()) 
+            {
+               KJoint[] joints = skeleton.getJoints();
+               int j = joints[KinectPV2.JointType_HandRight].getState();
+               if(j ==  KinectPV2.HandState_Open & bu > 60)
+               {
+                 println("shoot");
+                 player.shoot(30, 1);
+                 shoot = 1;
+                 //intじゃないとエラー？
+                 bu=0;
+               }
+            }                   
+          }
+        bu += 1;
+        //stop
+        
+        // 弾
+        for (int i=0;i<bulletList.size();i++) 
+        {
+          Bullet bullet = (Bullet) bulletList.get(i);
+          bullet.draw();
+          for (int j=0;j<fighterList.size();j++) 
+          {
+            Fighter fighter = (Fighter) fighterList.get(j);
+            if(bullet.isHit(fighter)) 
+            {  // 弾が当たったらダメージ
+              if(fighter==player) cameraShake += bullet.power * 0.5;  // プレイヤーがダメージを受けた場合は大きめに揺らす
+              if(fighter.damage(bullet.power))
+              {
+                fighterList.remove(j--);      // ライフが尽きているので削除
+                addExplosionEffect(fighter);  // 爆発エフェクト
+                cameraShake += 1.0;           // カメラを少し揺らす
+              }
+              bullet.life = 0;
+              break;
+            }
+          }
+          if(bullet.life<=0) bulletList.remove(i--); // 寿命で消滅
+        }
+        
+        // 情報表示
+        camera();
+        noLights();
+        textMode(SCREEN); textSize(20); textAlign(CENTER, TOP);
+        if(player.life>30) fill(0, 255, 0, 128);
+        else fill(255, 0, 0, 128);
+        //gameover
+        input();
+        cameraShake *= 0.95;
+        
+        if(player.life>0 ) 
+        {
+          if(earth_e == 1)
+          {
+            float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
+            if(goaldis<20) 
+            {
+              background(0); 
+              player.vel.x = 0;  player.vel.z = 0; 
+              fill(255, 128);
+              textSize(60);
+              text("MISSION CLEAR", width/2, height/2 - 40);
+              
+              if(clearMillis==0) clearMillis = millis();
+              text("TIME "+ nf(clearMillis*0.001, 1, 1) + "sec", width/2, height/2 + 30 );
+            }
+            else
+            {
+              //text("" + goaldis + " m", width/2, 30);
+              text("" + player.pos.x + " " + player.pos.z, width/2, 30);
+              textAlign(RIGHT, CENTER);
+              text("life " + nf(player.life, 1, 0), width/3, height-30);
+              rectMode(CORNER);
+              noStroke();
+              rect(20+width/3, height-34, map(player.life, 0, 100, 0, width/3), 5);
+            }
+          }
+        }
+           else 
+           {
+             textSize(60);
+             text("GAME OVER", width/2, height/2);
+             player.vel.x = 0;  player.vel.z = 0;
+           }
+          //機体の向き表現用
+          stroke(0,200,0);
+          drawDiamond(0.9*width,0.9*height,60,theta);
+          //stroke(0,0,200);
+          
+          //機体の傾き表現用       
+          drawcounter++;
+        }
 }
 
 //↑コンパスのひし形を書く用
@@ -538,9 +630,7 @@ void input(){
           player.accel(0.01);
         } else if(sp > 200){
          player.vel.mult(0.99);
-         }
-         
-         
+         }        
       }
     }
 
@@ -597,13 +687,15 @@ float random_pm(float range) {
 }
 
 // 宇宙背景、塵の描画
-void drawStars() {
+void drawStars() 
+{
   pushMatrix();
   translate(player.pos.x, player.pos.y, player.pos.z);
   int seed = int(random(1000)); randomSeed(0);
   float range = 500.0;
   PVector starPos = new PVector();
-  for(int i=0; i<250; i++) {
+  for(int i=0; i<250; i++) 
+  {
     // 遠くの星々
     strokeWeight(int(random(1,3))); stroke(random(128,255));
     starPos.set(random_pm(range*100), random_pm(range*100), random_pm(range*100));
