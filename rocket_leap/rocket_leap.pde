@@ -167,41 +167,50 @@ void draw() {
       textSize(86);
       fill(255);
       if ( hp<=0 ) {
+        fill(255, 0, 255);
         text("YOU WIN!!", 30, 100);
-        textSize(55);
-        text("The Earth was saved.", 30, 130);
+        textSize(50);
+        text("The Earth was saved.", 30, 150);
       }
-      else text("GAME OVER !!", 30, 100);
+      else {
+        stroke(255, 255, 0);
+        text("GAME OVER !!", 30, 100);
+      }
       //data
+      fill(255);
       text("HIT : ", 30, h2);
       fill(0,255,0);
-      text(hit, 60, h2);
+      text(hit, 150, h2);
       fill(255);
-      text("HP : ", 30, h2+50);
+      text("HP  : ", 30, h2+50);
       fill(0,255,0);
-      text(hp, 60, h2+50);
+      text(hp, 150, h2+50);
       fill(255);
       text("Distance of Rocket-Earth : ", 30, h2+100);
       fill(0,255,0);
-      text(edist, 60, h2+100);
+      text(edist, 700, h2+100);
       fill(255);
       text("You made ", 30, h2+150);
       fill(0,255,0);
-      text(enecount, 60, h2+150);
+      text(enecount, 300, h2+150);
       fill(255);
-      text("stars.", 120, h2+150);
+      text("stars.", 350, h2+150);
       textSize(30);
       fill(0,255,0);
-      text(enecountb, 30, h2+200);
+      text(enecountb, 100, h2+180);
       fill(255);
-      text("stars were Special.", 60, h2+200);
+      text("stars were Special.", 130, h2+180);
       //replay-box
-      if (w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) fill(255, 0, 0);
+      int replayX = 700;
+      int replayY = (int)100;
+      if (replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30) fill(255, 0, 0);
       else  fill(255);
-      rect(w2, h2+20, 180, 60);
+      rect(replayX-90, replayY-30, 180, 60);
       textSize(50);
       fill(0);
-      text("REPLAY", w2, h2+70);      
+      textAlign(CENTER, CENTER);
+      text("REPLAY", replayX, replayY);   
+      textAlign(LEFT, LEFT);   
       g2=fingerReplay(x[0],x[2],x[4],Re,w2,h2);
       if (g2==1.0) { //replayが押されたら
         client.write(3+ "\n"); //向こうにリセットを知らせる
@@ -646,13 +655,15 @@ float gap(float x, float y, float z) {
 
 float fingerReplay(float a,float b,float e,int Re,float w2,float h2){
   float fx, fy, x, y; //指の位置
+  int replayX = 700;
+  int replayY = (int)100;
   int resizeX =(int)width/250 ;
   int resizeY=(int)height/100;
   fx = resizeX*a;
   fy = resizeY*b;
   x=fx+ w2; //左上が原点
   y=fy+ h2;
-  if(w2<x && x<w2+180 && h2+20<y && y<h2+80){
+  if(replayX-90<x && x<replayX+90 && replayY-30<y && y<replayY+30){
     distanceReplay=1.0;
   }else{
     distanceReplay=0.0;
