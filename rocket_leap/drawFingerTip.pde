@@ -92,11 +92,13 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
                 }
                 println(ene_number);
                 int dead_ene_num = ene_number % 15;
-                Enemy dead = enemies.get(dead_ene_num);
-                if (!dead.isDead) {
-                  dead.isDead = true;
-                  enemies.set(dead_ene_num, dead);
-                  client.write(4 + " " + dead_ene_num + " " + 0 + "\n"); //死滅個体
+                if(enemies.size()>=dead_ene_num) {
+                  Enemy dead = enemies.get(dead_ene_num);
+                  if (!dead.isDead) {
+                    dead.isDead = true;
+                    enemies.set(dead_ene_num, dead);
+                    client.write(4 + " " + dead_ene_num + " " + 0 + "\n"); //死滅個体
+                  }
                 }
                 state1 = 3;
               }

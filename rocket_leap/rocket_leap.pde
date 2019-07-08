@@ -58,8 +58,8 @@ PImage img; //地球
 void setup() {
   //  s = new Server(this, 12345); // Start a simple server on a port
   //  client = new Client(this, "157.82.200.251",12345); //takumi
-  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-  // client = new Client(this, "157.82.202.205", 10000); //mamii
+  //client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+   client = new Client(this, "157.82.202.205", 10000); //mamii
 
   size(1280, 640);
   //  fullScreen(P3D);
@@ -80,7 +80,7 @@ void setup() {
   //opつけるときは消す（作業用）
     replace();
 //    earth = new Earth();
-    hp = 0;
+//    hp = 0;
 }
 
 void draw() {
