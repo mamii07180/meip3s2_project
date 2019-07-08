@@ -332,8 +332,26 @@ void draw(){
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
     float t = millis() / 1000.0;
     background(0,0,0,125);
-    c=s.available();
-    if(c != null) 
+   
+  
+    if(gameState==0)
+    {
+      fill(0,255,0,127);
+      textSize(100);
+      text("Waiting…", width * 0.6, height * 0.8);
+      for(int i =0;i<start_num;i++)
+      {
+        angle[i] += 0.01;
+        fill(0,255,0,127);
+        stroke(0,255,0);
+        ellipse(
+            distance[i] * cos(angle[i]) + width/2,
+            distance[i] * sin(angle[i]) + height/2,
+            0.5, 
+            0.5);
+        }
+        c=s.available(); 
+      if(c != null) 
     {
       input = c.readString();
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
@@ -352,23 +370,7 @@ void draw(){
          if(data[1]==15)player.accel(5);  //starting accel
       }
     }
-  
-    if(gameState==0)
-    {
-      fill(0,255,0,127);
-      textSize(100);
-      text("Waiting…", width * 0.6, height * 0.8);
-      for(int i =0;i<start_num;i++)
-      {
-        angle[i] += 0.01;
-        fill(0,255,0,127);
-        stroke(0,255,0);
-        ellipse(
-            distance[i] * cos(angle[i]) + width/2,
-            distance[i] * sin(angle[i]) + height/2,
-            0.5, 
-            0.5);
-        }
+    
     }
     if(gameState==1 && t-startTime<=5)
     {      
@@ -386,6 +388,35 @@ void draw(){
             (distance[i]+L) * cos(angle[i]) + width/2,
             (distance[i]+L) * sin(angle[i]) + height/2);
         }
+           c=s.available(); 
+      if(c != null) 
+    {
+      input = c.readString();
+      input = input.substring(0, input.indexOf("\n")); // Only up to the newline
+      data = int(split(input, ' ')); 
+      // Split values into an array
+      //generate obstacle
+      if(data[0] ==2)
+      {
+         println(data[0],data[1],data[2],data[3],data[4]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         if(data[1]==1)
+         {
+           gameState+=1;
+           startTime=millis() / 1000.0;
+         }
+         if(data[1]==14)player.accel(5);  //starting accel
+      }
+      if(data[0] == 6)
+         {
+            println(data[0],data[1],data[2]);
+            Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
+            earthlist.add(earth);
+            earth_e = 1;
+            earth_x = data[1];
+            earth_z = data[2];
+         }
+    }
     }
     else
       {     
