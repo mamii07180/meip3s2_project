@@ -48,6 +48,7 @@ Client client;
 String input;
 
 int[] data = new int[3];
+float[] x;
 
 //エフェクト
 ImgList imgList;
@@ -77,7 +78,6 @@ void setup() {
   img = loadImage("chikyuu.png");
         replace(); //OP入れるときはここ消す
         earth = new Earth(); //OP入れるときはここ消す
-  hp = 0;
 }
 
 void draw() {
@@ -94,29 +94,11 @@ void draw() {
 //  iBox = frame.interactionBox();
   Hand[] hand = new Hand[2];
   Vector[] palmPos = new Vector[2];
-  float[] x= new float[6];
+  x= new float[6];
   for(int i = 0; i<2; i++)  {
     hand[i]=hands.get(i);
     palmPos[i]=hand[i].palmPosition();
   }
-  /*
-  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
-    posi = 1;
-  }
-  else {
-    posi = 0;
-    fill(122 + aaa / 2);
-    if (hands.count() == 1) {
-      textAlign(CENTER);
-      text("Put Both Hands", w2, h2);
-    }
-    else {
-      textAlign(CENTER);
-      text("Put Your Hands", w2, h2);
-    }
-    textAlign(LEFT);
-  }
-*/
   x = fingergap1(hand[0], hand[1]);
   if (state3 == 0) { //初期状態
     if (x[5] == 0.0) {
@@ -161,60 +143,25 @@ void draw() {
   else if (state3 == 1) { //opおわった後
     float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
     if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
-      client.write(6 +"\n"); 
-      //message
-      noStroke();
-      textSize(86);
-      fill(255);
-      if ( hp<=0 ) {
-        text("YOU WIN!!", 30, 100);
-        textSize(55);
-        text("The Earth was saved.", 30, 130);
-      }
-      else text("GAME OVER !!", 30, 100);
-      //data
-      text("HIT : ", 30, h2);
-      fill(0,255,0);
-      text(hit, 60, h2);
-      fill(255);
-      text("HP : ", 30, h2+50);
-      fill(0,255,0);
-      text(hp, 60, h2+50);
-      fill(255);
-      text("Distance of Rocket-Earth : ", 30, h2+100);
-      fill(0,255,0);
-      text(edist, 60, h2+100);
-      fill(255);
-      text("You made ", 30, h2+150);
-      fill(0,255,0);
-      text(enecount, 60, h2+150);
-      fill(255);
-      text("stars.", 120, h2+150);
-      textSize(30);
-      fill(0,255,0);
-      text(enecountb, 30, h2+200);
-      fill(255);
-      text("stars were Special.", 60, h2+200);
-      //replay-box
-      if (w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80) fill(255, 0, 0);
-      else  fill(255);
-      rect(w2, h2+20, 180, 60);
-      textSize(50);
-      fill(0);
-      text("REPLAY", w2, h2+70);      
-      g2=fingerReplay(x[0],x[2],x[4],Re,w2,h2);
-      if (g2==1.0) { //replayが押されたら
-        client.write(3+ "\n"); //向こうにリセットを知らせる
-        replace();
-      }
-      //↓作業用------------
-      if(mousePressed && w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80){
-        client.write(3+ "\n"); //向こうにリセットを知らせる
-        replace();
-      }
-      //↑作業用------------
+      gameover(edist);
     } else { //--------------------ゲーム
-      Position(palmPos, hands, posi);
+      if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
+        posi = 1;
+      }
+      else {
+        posi = 0;
+        fill(122 + aaa / 2);
+        if (hands.count() == 1) {
+          textAlign(CENTER);
+          text("Put Both Hands", w2, h2);
+        }
+        else {
+          textAlign(CENTER);
+          text("Put Your Hands", w2, h2);
+        }
+      }
+      textAlign(LEFT);
+      posi = p;
       drawFingerTip(x[0], x[2], x[3], x[4], posi); //敵生成
       stroke(255);
       noFill();
@@ -301,25 +248,6 @@ void draw() {
   }
 }
 
-void Position(Vector[] palmPos, HandList hands, int posi){
-  int p;
-  if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
-    p = 1;
-  }
-  else {
-    p = 0;
-    fill(122 + aaa / 2);
-    if (hands.count() == 1) {
-      textAlign(CENTER);
-      text("Put Both Hands", w2, h2);
-    }
-    else {
-      textAlign(CENTER);
-      text("Put Your Hands", w2, h2);
-  }
-  textAlign(LEFT);
-  posi = p;
-}
 
 
 }
@@ -438,7 +366,7 @@ class Earth { //-------------------------地球
       }
     }
     loc = new PVector(x, y);
-    client.write(5+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10 + 100) +"\n"); 
+    client.write(5+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10) +"\n"); 
     delay(100);
   }
 
@@ -514,7 +442,7 @@ class Enemy { //-------------------------------敵
     isDead = false;
     enebig=b;
     if(enebig ==1) println("big"+ size);
-    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10 + 100) + " " + (int)size * 10 + " " + enebig + "\n");
+    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10) + " " + (int)size * 10 + " " + enebig + "\n");
     delay(100);
     println(loc.x,loc.y);//個体番号、座標、半径を送信
   }
@@ -646,13 +574,15 @@ float gap(float x, float y, float z) {
 
 float fingerReplay(float a,float b,float e,int Re,float w2,float h2){
   float fx, fy, x, y; //指の位置
+  int replayX = 700;
+  int replayY = (int)100;
   int resizeX =(int)width/250 ;
   int resizeY=(int)height/100;
   fx = resizeX*a;
   fy = resizeY*b;
   x=fx+ w2; //左上が原点
   y=fy+ h2;
-  if(w2<x && x<w2+180 && h2+20<y && y<h2+80){
+  if(replayX-90<x && x<replayX+90 && replayY-30<y && y<replayY+30){
     distanceReplay=1.0;
   }else{
     distanceReplay=0.0;
