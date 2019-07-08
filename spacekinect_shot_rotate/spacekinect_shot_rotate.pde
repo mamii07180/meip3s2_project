@@ -252,8 +252,8 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
-    int colVar=(int)scale%255; 
-    fill(255-colVar,255-colVar);
+    int colVar=(int)scale%100; 
+    fill(0,220,0,155+colVar);
     pushMatrix();
     translate(loc.x/2+75*sin(radians(theta)),loc.z/2-75*cos(radians(theta)));
     sphere(size*(1+(scale/1000)*type));//typeが0の時は変わらない
@@ -381,7 +381,7 @@ void draw(){
     }
     
     
-    if(gameState==1 && millis()/1000-startTime<=5)
+    if(gameState==1 && (millis()-startTime)/1000<=5)
     {      
       int L=10000;
       for(int i=0;i<start_num;i++)
@@ -428,7 +428,7 @@ void draw(){
     }
     }
     else
-      {     
+      {  
         c=s.available();
         if(c != null) 
         {
@@ -445,6 +445,17 @@ void draw(){
              player.vel.x = 0;
              player.vel.z = 0;
           } 
+          if(data[0] ==2)
+          {
+             println(data[0],data[1],data[2],data[3],data[4],data[5]);
+             enemies.add(new Enemy(data[2],0,data[3],data[4],data[1],data[5]));
+             if(data[1]==1)
+             {
+               gameState+=1;
+               startTime=millis() / 1000.0;
+             }
+             if(data[1]==14)player.accel(5);  //starting accel
+          }
           // delete obstacle
           if(data[0] ==4)
           {
