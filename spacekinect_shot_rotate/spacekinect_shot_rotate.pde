@@ -234,10 +234,13 @@ class Enemy extends Chara{ //-------------------------------敵
   int coolingTime;
   boolean isDead;
   int index;
-  Enemy(float x, float y, float z, float dis,int a){
+  float scale;
+  int type;
+  Enemy(float x, float y, float z, float dis,int a,int d){
     super(x, y, z, dis, ENEMY);
     size = dis;
     index = a;
+    type =d;
     if (x==0&&z==0){
       loc = new PVector(random(-2000,2000), random(-2000,2000));
     } else {
@@ -248,11 +251,14 @@ class Enemy extends Chara{ //-------------------------------敵
   }
   
   void drawShape() {
-    fill(0, 220, 0);
+    scale=(millis()-startTime)%2000-scale;
+    if (scale>1000)scale=2000-scale;
+    int colVar =(int)scale%100;
+    fill(0, 220, 0,155+colVar);
     pushMatrix();
     translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta)));
     //translate(loc.x/2,0,loc.z/2);
-    sphere(size);
+    sphere(size*(1+(scale/1000)*type));
     popMatrix();
   }
   
@@ -362,19 +368,19 @@ void draw(){
       //generate obstacle
       if(data[0] ==2)
       {
-         println(data[0],data[1],data[2],data[3],data[4]);
-         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         println(data[0],data[1],data[2],data[3],data[4],data[5]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1],data[5]));
          if(data[1]==1)
          {
            gameState+=1;
-           startTime=millis() / 1000.0;
+           startTime=millis();
          }
          if(data[1]==15)player.accel(5);  //starting accel
       }
     }
     
     }
-    if(gameState==1 && t-startTime<=5)
+    if(gameState==1 && (millis()-startTime)/1000<=5)
     {      
       int L=10000;
       for(int i=0;i<start_num;i++)
@@ -400,8 +406,8 @@ void draw(){
       //generate obstacle
       if(data[0] ==2)
       {
-         println(data[0],data[1],data[2],data[3],data[4]);
-         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         println(data[0],data[1],data[2],data[3],data[4],data[5]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1],data[5]));
          if(data[1]==1)
          {
            gameState+=1;
@@ -433,8 +439,8 @@ void draw(){
           //reset
            if(data[0] ==2)
          {
-         println(data[0],data[1],data[2],data[3],data[4]);
-         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         println(data[0],data[1],data[2],data[3],data[4],data[5]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1],data[5]));
          if(data[1]==1)
          {
            gameState+=1;
