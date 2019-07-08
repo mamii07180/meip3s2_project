@@ -6,6 +6,7 @@ float fingerReplay(float a,float b,float e,int Re){
   fy = height/100*b;
   x=fx+ w2; //左上が原点
   y=fy+ h2;
+  button = false;
   if(replayX-90<x && x<replayX+90 && replayY-30<y && y<replayY+30){
     distanceReplay=1.0;
   }else{
@@ -21,6 +22,7 @@ float fingerReplay(float a,float b,float e,int Re){
       state4=1;
       return 0.0;
     }else if(e==1.0&&state4==1){
+      button = true;
       stroke(0,255,0);
       strokeWeight(5);
       line(x, y+16, x, y-16);    //撃つ方向
