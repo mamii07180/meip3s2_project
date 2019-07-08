@@ -405,8 +405,17 @@ void draw(){
            gameState+=1;
            startTime=millis() / 1000.0;
          }
-         if(data[1]==15)player.accel(5);  //starting accel
+         if(data[1]==14)player.accel(5);  //starting accel
       }
+      if(data[0] == 6)
+         {
+            println(data[0],data[1],data[2]);
+            Earth earth = new Earth(data[1]/2,0,data[2]/2,0);
+            earthlist.add(earth);
+            earth_e = 1;
+            earth_x = data[1];
+            earth_z = data[2];
+         }
     }
     }
     else
