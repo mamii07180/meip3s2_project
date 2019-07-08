@@ -13,7 +13,7 @@ Controller leap = new Controller();         // leap という名前で Controlle
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
 int state2 = 0;
-int state3 = 1; //OPとゲームを分けるやつ
+int state3 = 0; //OPとゲームを分けるやつ
 int state4=0;
 int state5=0;
 int posi = 0;
@@ -57,9 +57,15 @@ PImage img; //地球
 
 void setup() {
   //  s = new Server(this, 12345); // Start a simple server on a port
+<<<<<<< HEAD
   //  client = new Client(this, "157.82.200.251",12345); //takumi
   //client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
    client = new Client(this, "157.82.202.205", 10000); //mamii
+=======
+  //client = new Client(this, "157.82.200.251",10000); //takumi
+  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+  // client = new Client(this, "157.82.202.205", 10000); //mamii
+>>>>>>> kaicho-replay-3
 
   size(1280, 640);
   //  fullScreen(P3D);
@@ -78,9 +84,12 @@ void setup() {
   img = loadImage("chikyuu.png");
   client.write(7 + " " + width + " " + height + "\n"); //縦横比
   //opつけるときは消す（作業用）
-    replace();
+   // replace();
 //    earth = new Earth();
+<<<<<<< HEAD
 //    hp = 0;
+=======
+>>>>>>> kaicho-replay-3
 }
 
 void draw() {
@@ -108,37 +117,18 @@ void draw() {
   }
   else if (state3 == 1) { //opおわった後
     float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
-    if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
+    if (hp<=0 || edist<=10) { //HPがなくなったor到着したらおわり
       gameover(edist);
+      println(hp + edist);
     } else { //--------------------ゲーム
       if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
         posi = 1;
       }
       else {
         posi = 0;
-        fill(122 + aaa / 2);
-        if (hands.count() == 1) {
-          textAlign(CENTER);
-          text("Put Both Hands", w2, h2);
-        }
-        else {
-          textAlign(CENTER);
-          text("Put Your Hands", w2, h2);
-        }
       }
       textAlign(LEFT);
       drawFingerTip(x[0], x[2], x[3], x[4], posi); //敵生成
-      stroke(255);
-      noFill();
-      strokeWeight(3);
-      line(10, 10, 10, 60);    //四つ角
-      line(10, 10, 60, 10);    
-      line(width-10, height-10, width-10, height-60);    
-      line(width-10, height-10, width-60, height-10);    
-      line(10, height-10, 10, height-60);    
-      line(10, height-10, 60, height-10);    
-      line(width-10, 10, width-10, 60);    
-      line(width-10, 10, width-60, 10);    
 
       myself.display();
       earth.display();
@@ -154,6 +144,7 @@ void draw() {
       ArrayList<Enemy> nextEnemies = new ArrayList<Enemy>();
       for (Enemy enemy : enemies) {
         enemy.update();
+        if(enemy.enebig==1) println(enemy.size);
         if (!enemy.isDead) {
           nextEnemies.add(enemy);
         } else {
@@ -206,6 +197,32 @@ void draw() {
       fill(255);
       text("x:", width-160, 65);
       text("y:", width-160, 105);
+      
+       if (palmPos[0].getX()>palmPos[1].getX() && hands.count() == 2) { //いい感じの場所だったら
+      }
+      else {
+        fill(122 + aaa / 2);
+        if (hands.count() == 1) {
+          textAlign(CENTER);
+          text("Put Both Hands", w2, h2);
+        }
+        else {
+          textAlign(CENTER);
+          text("Put Your Hands", w2, h2);
+        }
+      }
+      
+      stroke(255);
+      noFill();
+      strokeWeight(3);
+      line(10, 10, 10, 60);    //四つ角
+      line(10, 10, 60, 10);    
+      line(width-10, height-10, width-10, height-60);    
+      line(width-10, height-10, width-60, height-10);    
+      line(10, height-10, 10, height-60);    
+      line(10, height-10, 60, height-10);    
+      line(width-10, 10, width-10, 60);    
+      line(width-10, 10, width-60, 10);    
 
       stukaEffect.effectPlay();
     }  
@@ -252,7 +269,6 @@ class Myself { //-------------------------ロケット
     // Receive data from client
     //    client = c.available();
     if (client.available() > 0) {
-      println("OK");
       input = client.readString();
       input = input.substring(0, input.indexOf("\n")); // Only up to the newline
       data = int(split(input, ' ')); // Split values into an array
@@ -327,6 +343,7 @@ class Earth { //-------------------------地球
     }
     loc = new PVector(x, y);
     client.write(6+" "+(int)((loc.x-w2)*10) +" "+(int)((loc.y-h2)*10) +"\n"); 
+    println(loc.x,loc,y);
     delay(100);
   }
 
@@ -394,7 +411,6 @@ class Enemy { //-------------------------------敵
   boolean isDead;
   int number;
   int enebig; //0:普通、b=1:強い敵
-  int timebig;
 
   Enemy(float x, float y, float dis, int ene_number, int b) { //b=0:普通、b=1:強い敵
     size = dis;
@@ -402,8 +418,9 @@ class Enemy { //-------------------------------敵
     loc = new PVector(x, y);
     isDead = false;
     enebig=b;
+    if(enebig ==1) println("big"+ size);
     client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10) + " " + (int)size * 10 + " " + enebig + "\n");
-    if(enebig==1) timebig = (int)millis();
+    println(number,loc.x,+loc.y,size);
     delay(100);
     println(loc.x,loc.y);//個体番号、座標、半径を送信
   }
@@ -413,13 +430,7 @@ class Enemy { //-------------------------------敵
     else fill(255 - aaa, 255, aaa);
     stroke(255 - aaa, 255, aaa);
     if(enebig == 1){
-      float scale = (millis()-timebig)%2000;
-      if (scale>1000) {
-        scale = 2000-scale;
-      }
-      println(scale);
-      ellipse(loc.x, loc.y, size*(1+scale/1000), size*(1+scale/1000));
-
+      ellipse(loc.x, loc.y, size+(aaa)/10, size+(aaa)/10);
     } else {
       ellipse(loc.x, loc.y, size, size);
     }
@@ -527,8 +538,8 @@ float[] fingergap1(Hand hand1,Hand hand2){
   }else if((fingertip1.getY()>300&&state2==2)||state2==3){
     xx[5]=3.0;
     state2=3;
-  }else {
-    xx[5] = 0.0;
+  }else{
+    xx[5]=0.0;
   }
     return xx;
 }

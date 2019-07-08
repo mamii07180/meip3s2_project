@@ -90,7 +90,6 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
                   enemies.add(new Enemy(n, m, d, ene_number, 0));
                   enecount++;
                 }
-                println(ene_number);
                 int dead_ene_num = ene_number % 15;
                 if(enemies.size()>=dead_ene_num) {
                   Enemy dead = enemies.get(dead_ene_num);
@@ -117,6 +116,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
             if(timelag<5500){
                 ellipse(x, y, rchange, rchange);
                 rchange = rchange + 2;
+                println("time");
             }
           }
           else  stroke(255 - aaa, 255, aaa);
@@ -133,6 +133,7 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
         arc( x, y, 100, 100, PI/2, rad+PI/2);
       }
     }
+        println(big);
   }
   else { //positionよくなかったら
     fx = 0;

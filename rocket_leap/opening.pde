@@ -1,4 +1,5 @@
 int g1=0;
+int stateopening =0;
 void opening(){
   if (x[5] == 0.0) {
     background(0);
@@ -11,15 +12,20 @@ void opening(){
     fill(255);
     text("The World is Nothing", w2, h2);
   }
+<<<<<<< HEAD
   else if (x[5] == 1.0) {
     textAlign(CENTER);
+=======
+  else if (x[5] == 1.0&&stateopening==0||x[5]==1.0&&stateopening==1) {
+>>>>>>> kaicho-replay-3
     background(0);
     textSize(80);
     fill(255);
     text("Let there be...", w2, h2);
     textAlign(LEFT);
+    stateopening=1;
   }
-  else if (x[5] == 2.0) {
+  else if (x[5] == 2.0&&stateopening==1||stateopening==2) {
     if (g1<256) {
       background(g1);
       textSize(80);
@@ -35,8 +41,13 @@ void opening(){
     }
     else if (g1 == 511) {
       replace();
+<<<<<<< HEAD
 //      earth = new Earth();
+=======
+      //earth = new Earth();
+>>>>>>> kaicho-replay-3
       state3 = 1; //ゲーム状態へ
     }
+    stateopening=2;
   }
 }
