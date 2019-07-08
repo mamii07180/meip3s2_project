@@ -413,12 +413,12 @@ class Enemy { //-------------------------------敵
     else fill(255 - aaa, 255, aaa);
     stroke(255 - aaa, 255, aaa);
     if(enebig == 1){
-      int scale = (millis()-timebig)%2000;
+      float scale = (millis()-timebig)%2000;
       if (scale>1000) {
         scale = 2000-scale;
       }
       println(scale);
-      ellipse(loc.x, loc.y, size*(1+scale/20), size*(1+scale/20));
+      ellipse(loc.x, loc.y, size*(1+scale/1000), size*(1+scale/1000));
 
     } else {
       ellipse(loc.x, loc.y, size, size);
