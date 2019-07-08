@@ -1,3 +1,4 @@
+    boolean button = false;
 void gameover(float edist){
     client.write(6 +"\n"); 
     //message
@@ -11,8 +12,9 @@ void gameover(float edist){
         text("The Earth was saved.", 30, 150);
     }
     else {
-        stroke(255, 255, 0);
-        text("GAME OVER !!", 30, 100);
+        fill(255, 0, 255);
+        text("YOU LOSE...", 30, 100);
+        textSize(50);
     }
     //data
     fill(255);
@@ -26,7 +28,7 @@ void gameover(float edist){
     fill(255);
     text("Distance of Rocket-Earth : ", 30, h2+100);
     fill(0,255,0);
-    text(edist, 700, h2+100);
+    text(edist+" ×10000km", 700, h2+100);
     fill(255);
     text("You made ", 30, h2+150);
     fill(0,255,0);
@@ -41,21 +43,24 @@ void gameover(float edist){
     //replay-box
     int replayX = 700;
     int replayY = (int)100;
-    if (replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30) fill(255, 0, 0);
+    if (replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30
+    || button) fill(255, 0, 255);
     else  fill(255);
     rect(replayX-90, replayY-30, 180, 60);
     textSize(50);
     fill(0);
     textAlign(CENTER, CENTER);
     text("REPLAY", replayX, replayY);   
+    fill(255);
+    text(" <<<", replayX+140, replayY);   
     textAlign(LEFT, LEFT);   
-    g2=fingerReplay(x[0],x[2],x[4],Re,w2,h2);
+    g2=fingerReplay(x[0], x[2], x[4], Re);
     if (g2==1.0) { //replayが押されたら
         client.write(3+ "\n"); //向こうにリセットを知らせる
         replace();
     }
     //↓作業用------------
-    if(mousePressed && w2<=mouseX && mouseX<=w2+180 && h2+20<=mouseY && mouseY<=h2+80){
+    if(mousePressed && replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30){
         client.write(3+ "\n"); //向こうにリセットを知らせる
         replace();
     }
