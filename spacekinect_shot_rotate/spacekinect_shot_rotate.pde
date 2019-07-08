@@ -162,7 +162,7 @@ class Effect extends Chara  {
     radius *= 1.04;
     fill(255, 64, 32, map(life, 0, 100, 0, 128));
     pushMatrix();
-    translate(loc.x,loc.z);
+     translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta))); 
     sphere(radius);
     popMatrix();
   }
@@ -219,7 +219,8 @@ class Earth extends Chara  {
 }
   void drawShape() {
    pushMatrix();
-   translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect75座標系に変換されたx,z座標が送られてくる
+  // translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect75座標系に変換されたx,z座標が送られてくる
+   translate(loc.x,0,loc.z);
    shape(sphere);
    popMatrix();
   
@@ -249,7 +250,8 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     fill(0, 220, 0);
     pushMatrix();
-    translate(loc.x/2+75*sin(radians(theta)),loc.z/2-75*cos(radians(theta)));
+    translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta)));
+    //translate(loc.x/2,0,loc.z/2);
     sphere(size);
     popMatrix();
   }
@@ -429,6 +431,17 @@ void draw(){
           // Split values into an array
           //generate obstacle
           //reset
+           if(data[0] ==2)
+         {
+         println(data[0],data[1],data[2],data[3],data[4]);
+         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
+         if(data[1]==1)
+         {
+           gameState+=1;
+           startTime=millis() / 1000.0;
+         }
+         if(data[1]==14)player.accel(5);  //starting accel
+          }
           if(data[0] ==3)
           {
              player.pos.x = 0;
@@ -521,7 +534,6 @@ void draw(){
                int j = joints[KinectPV2.JointType_HandRight].getState();
                if(j ==  KinectPV2.HandState_Open & bu > 60)
                {
-                 println("shoot");
                  player.shoot(30, 1);
                  shoot = 1;
                  //intじゃないとエラー？
@@ -631,8 +643,13 @@ void drawDiamond(float x,float y,float r,float theta_d)
 float theta=0;
 // 毎フレームの入力//////////////////////////////////////////////////////////////////////////////////
 void input(){
+   if(player.life>0) { 
+    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);  
+    else player.vel.mult(0.98); 
+     if(keyPressed && key=='w') player.pos.z = 0; 
+  } 
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-  
+   
     //individual JOINTS
     for (int i = 0; i < skeletonArray.size(); i++)
     {
