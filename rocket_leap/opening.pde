@@ -12,12 +12,8 @@ void opening(){
     fill(255);
     text("The World is Nothing", w2, h2);
   }
-<<<<<<< HEAD
   else if (x[5] == 1.0) {
     textAlign(CENTER);
-=======
-  else if (x[5] == 1.0&&stateopening==0||x[5]==1.0&&stateopening==1) {
->>>>>>> kaicho-replay-3
     background(0);
     textSize(80);
     fill(255);
@@ -41,11 +37,7 @@ void opening(){
     }
     else if (g1 == 511) {
       replace();
-<<<<<<< HEAD
 //      earth = new Earth();
-=======
-      //earth = new Earth();
->>>>>>> kaicho-replay-3
       state3 = 1; //ゲーム状態へ
     }
     stateopening=2;
