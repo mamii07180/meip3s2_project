@@ -328,18 +328,20 @@ int drawcounter = 0;
 
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-//println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
+  println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
     //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
     sp = player.vel.dist(new PVector(0,0,0));
-    /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
-    else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
-    else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
-    else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
-    else */background(0);
+    if(player.vel.z<0 && abs(player.pos.z+3200) <1000)  background(map(abs(player.pos.z+3200),0,1000,50,0 ),125);
+    else if(player.vel.z>0 && abs(player.pos.z-3200) <1000) background(map(abs(player.pos.z-3200),0,1000,220,0 ),125);
+    else if(player.vel.x<0 && abs(player.pos.x+6400) <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ),125);
+    else if(player.vel.x>0 && abs(player.pos.x-6400) <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ),125);
+    else background(0,125);
+    
+ 
     //change
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
     float t = millis() / 1000.0;
-    background(0,0,0,125);
+    //background(0,0,0,125);
     float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
     int colVar=(int)scale/20; //点滅させる用
