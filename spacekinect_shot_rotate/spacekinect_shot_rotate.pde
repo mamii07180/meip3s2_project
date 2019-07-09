@@ -310,7 +310,7 @@ void setup() {
   //textFont( createFont("Lucida Console", 20) );
   //地球用
   img = loadImage("earth.jpg");
-  sphere=createShape(SPHERE,400);
+  sphere=createShape(SPHERE,100);
   sphere.setTexture(img);
   sphere.setStrokeWeight(0);
   //スタート用
@@ -346,7 +346,7 @@ void draw(){
     float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
     
-    if(gamestate==0)
+    if(gameState==0)
     {
       fill(0,255,0,127);
       textSize(100);
@@ -450,7 +450,7 @@ void draw(){
              player.pos.z = 100;
              player.vel.x = 0;
              player.vel.z = 0;
-             win = 0;
+             win=0;
           } 
           if(data[0] ==2)
           {
@@ -492,6 +492,7 @@ void draw(){
          if(data[0] == 7)
          {
            win = 1;
+         }
           // Draw line using received coords
         }
         int x_send=int(player.pos.x/10);
