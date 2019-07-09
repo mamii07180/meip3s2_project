@@ -12,6 +12,7 @@ String input;
 int j = 15;
 int data[];
 int shoot; //timing of shoot
+int win = 0;
 float sp;
 int earth_e = 0;
 //stop
@@ -119,10 +120,10 @@ class Player extends Fighter {
   }
    void update() {
     pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
-    if(pos.z > 3300) pos.z -= 6400;
-    if(pos.z < -3100) pos.z += 6400;
-    if(pos.x > 6400) pos.x -= 12800;
-    if(pos.x < -6400) pos.x += 12800;
+    if(pos.z > 6400) pos.z -= 12800;
+    if(pos.z < -6400) pos.z += 12800;
+    if(pos.x > 12800) pos.x -= 25600;
+    if(pos.x < -12800) pos.x += 25600;
  /*   if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){  //move to center
       pos.x = 0;
       pos.z = 0;
@@ -162,7 +163,7 @@ class Effect extends Chara  {
     radius *= 1.04;
     fill(255, 64, 32, map(life, 0, 100, 0, 128));
     pushMatrix();
-     translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta))); 
+    translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta)));
     sphere(radius);
     popMatrix();
   }
@@ -219,7 +220,7 @@ class Earth extends Chara  {
 }
   void drawShape() {
    pushMatrix();
-  // translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect75座標系に変換されたx,z座標が送られてくる
+   //translate(75*sin(radians(theta)),0,-75*cos(radians(theta)));//地球のkinect75座標系に変換されたx,z座標が送られてくる
    translate(loc.x,0,loc.z);
    shape(sphere);
    popMatrix();
@@ -253,17 +254,12 @@ class Enemy extends Chara{ //-------------------------------敵
   void drawShape() {
     scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
-    int colVar=(int)scale%100; 
+    int colVar=(int)scale/20; //点滅させる用
     fill(0,220,0,155+colVar);
     pushMatrix();
-<<<<<<< HEAD
+    //translate(loc.x/2+75*sin(radians(theta)),loc.z/2-75*cos(radians(theta)));
     translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta)));
-    //translate(loc.x/2,0,loc.z/2);
-    sphere(size);
-=======
-    translate(loc.x/2+75*sin(radians(theta)),loc.z/2-75*cos(radians(theta)));
     sphere(size*(1+(scale/1000)*type));//typeが0の時は変わらない
->>>>>>> d94498e8592cdfad0cca7a974807655ad8eadc52
     popMatrix();
   }
   
@@ -271,11 +267,11 @@ class Enemy extends Chara{ //-------------------------------敵
 }
 
 //stop
-int width=1120;
+int width=1600;
 int height=840;
 // 初期化//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  size(1120, 840, P3D);
+  size(1600, 840, P3D);
   //change
   s = new Server(this,10000);
   kinect = new KinectPV2(this);
@@ -333,25 +329,28 @@ int drawcounter = 0;
 
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-//println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
+  println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
     //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
     sp = player.vel.dist(new PVector(0,0,0));
-    /*if(player.vel.z<0 && player.pos.z+3100 <1000) background(map(abs(player.pos.z+3100),0,1000,220,0 ));
-    else if(player.vel.z>0 && player.pos.z-3300 <1000) background(map(abs(player.pos.z-3300),0,1000,220,0 ));
-    else if(player.vel.x<0 && player.pos.x+6400 <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ));
-    else if(player.vel.x>0 && player.pos.x-6400 <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ));
-    else */background(0);
+    if(player.vel.z<0 && abs(player.pos.z+6400) <1000)  background(map(abs(player.pos.z+3200),0,1000,50,0 ),125);
+    else if(player.vel.z>0 && abs(player.pos.z-6400) <1000) background(map(abs(player.pos.z-3200),0,1000,50,0 ),125);
+    else if(player.vel.x<0 && abs(player.pos.x+12800) <1000) background(map(abs(player.pos.z+6400),0,1000,50,0 ),125);
+    else if(player.vel.x>0 && abs(player.pos.x-12800) <1000) background(map(abs(player.pos.x-6400),0,1000,50,0 ),125);
+    else background(0,125);
+    
+ 
     //change
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
     float t = millis() / 1000.0;
-    background(0,0,0,125);
-   
-  
+    //background(0,0,0,125);
+    float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
+    if(scale>1000)scale=2000-scale;
+    
     if(gameState==0)
     {
       fill(0,255,0,127);
       textSize(100);
-      text("Waiting…", width * 0.6, height * 0.8);
+      text("Loading…", width * 0.6, height * 0.8);
       for(int i =0;i<start_num;i++)
       {
         angle[i] += 0.01;
@@ -445,23 +444,13 @@ void draw(){
           // Split values into an array
           //generate obstacle
           //reset
-           if(data[0] ==2)
-         {
-         println(data[0],data[1],data[2],data[3],data[4]);
-         enemies.add(new Enemy(data[2],0,data[3],data[4],data[1]));
-         if(data[1]==1)
-         {
-           gameState+=1;
-           startTime=millis() / 1000.0;
-         }
-         if(data[1]==14)player.accel(5);  //starting accel
-          }
           if(data[0] ==3)
           {
              player.pos.x = 0;
              player.pos.z = 100;
              player.vel.x = 0;
              player.vel.z = 0;
+             win=0;
           } 
           if(data[0] ==2)
           {
@@ -500,6 +489,10 @@ void draw(){
             earth_x = data[1];
             earth_z = data[2];
          }
+         if(data[0] == 7)
+         {
+           win = 1;
+         }
           // Draw line using received coords
         }
         int x_send=int(player.pos.x/10);
@@ -530,7 +523,7 @@ void draw(){
         }
         for(int i=0;i<enemies.size();i++) {
           Enemy chara = (Enemy) enemies.get(i);
-          if(chara.isDead == false){
+          if(chara.isDead == false &&  player.pos.dist(chara.loc) < 20000 ){
           chara.draw();
           }
         }
@@ -608,7 +601,7 @@ void draw(){
           if(earth_e == 1)
           {
             float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
-            if(goaldis<20) 
+            if(win ==1) 
             {
               background(0); 
               player.vel.x = 0;  player.vel.z = 0; 
@@ -622,6 +615,10 @@ void draw(){
             else
             {
               //text("" + goaldis + " m", width/2, 30);
+              float distanceEarth=sqrt((earth_x-player.pos.x)*(earth_x-player.pos.x)+(earth_z-player.pos.z)*(earth_z-player.pos.z));
+              int distanceEarth_new=(int)distanceEarth;
+              textSize(40);
+              text("distance\n="+ distanceEarth_new ,0.1*width,0.75*height);
               text("" + player.pos.x + " " + player.pos.z, width/2, 30);
               textAlign(RIGHT, CENTER);
               text("life " + nf(player.life, 1, 0), width/3, height-30);
@@ -642,7 +639,8 @@ void draw(){
           drawDiamond(0.9*width,0.9*height,60,theta);
           //stroke(0,0,200);
           
-          //機体の傾き表現用       
+          //機体の傾き表現用  
+          stroke(0,200,0);
           drawcounter++;
         }
 }
@@ -665,16 +663,29 @@ void drawDiamond(float x,float y,float r,float theta_d)
   popMatrix();
 }
 
+void arrow(float x,float y,float size,int type)//typeが1なら右側-1なら左側
+{
+  float R;
+  pushMatrix();
+  translate(x,y);//x,yに移る
+  beginShape();
+  float[]x_a={0.5, 2.5, 2.5, 4.0, 2.5, 2.5, 0.5};
+  float[]y_a={0.5, 0.5, 1.0, 0.0, -1, -0.5, -0.5};
+  for(int i=0;i<7;i++)
+  {
+    vertex(x_a[i]*size*type,y_a[i]*size*type);
+  }
+  endShape(CLOSE);//閉じてね
+  popMatrix();
+}
+
 float theta=0;
 // 毎フレームの入力//////////////////////////////////////////////////////////////////////////////////
 void input(){
-   if(player.life>0) { 
-    if((keyPressed && key==' ') || (mousePressed && mouseButton==RIGHT)) player.accel(0.04);  
-    else player.vel.mult(0.98); 
-     if(keyPressed && key=='w') player.pos.z = 0; 
-  } 
+    float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
+    if(scale>1000)scale=2000-scale;
+    int colVar=(int)scale/20; //点滅させる用
     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();
-   
     //individual JOINTS
     for (int i = 0; i < skeletonArray.size(); i++)
     {
@@ -687,10 +698,22 @@ void input(){
          float RightDiff=joints[KinectPV2.JointType_ShoulderRight].getY()-joints[KinectPV2.JointType_HandRight].getY();
          float InputLeft=constrain(map(abs(LeftDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
          float InputRight=constrain(map(abs(RightDiff),50,500,0,1),0,0.2);//絶対値が50以上500以下なら[0,0.2]に正規化。50,500をキャリブレーションで設定出来るよう実装したい
-         if(LeftDiff<0) InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
-         if(RightDiff<0) InputRight=-InputRight;
+         if(LeftDiff<0) 
+         {
+           InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
+           stroke(0,200,0);
+           fill(0,200,0,155+colVar);
+         }
+         if(RightDiff<0)
+         {
+           InputRight=-InputRight;
+           stroke(0,200,0);
+           fill(0,200,0,155+colVar);
+         }
          if(InputLeft*InputRight<0)//左右の上下が反対なら回転
          {
+           int arrow_direction=int(InputLeft/abs(InputLeft));//LeftDiffが負の時に-1にRightが負の時に1に
+           arrow(0.1*width,0.9*height,15,arrow_direction);
            float Input=InputRight-InputLeft;
            player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
            theta -= Input;
