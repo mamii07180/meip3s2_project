@@ -119,10 +119,10 @@ class Player extends Fighter {
   }
    void update() {
     pos.x += vel.x; pos.y += vel.y; pos.z += vel.z;
-    if(pos.z > 3300) pos.z -= 6400;
-    if(pos.z < -3100) pos.z += 6400;
-    if(pos.x > 6400) pos.x -= 12800;
-    if(pos.x < -6400) pos.x += 12800;
+    if(pos.z > 6400) pos.z -= 12800;
+    if(pos.z < -6400) pos.z += 12800;
+    if(pos.x > 12800) pos.x -= 25600;
+    if(pos.x < -12800) pos.x += 25600;
  /*   if(pos.z > 3300 || pos.z < -3100 || pos.x < -6400 || pos.x > 6400){  //move to center
       pos.x = 0;
       pos.z = 0;
@@ -162,7 +162,7 @@ class Effect extends Chara  {
     radius *= 1.04;
     fill(255, 64, 32, map(life, 0, 100, 0, 128));
     pushMatrix();
-    translate(loc.x,loc.z);
+    translate((2/3)*(loc.x/2)+75*sin(radians(theta)),0,loc.z/2-75*cos(radians(theta)));
     sphere(radius);
     popMatrix();
   }
@@ -331,10 +331,10 @@ void draw(){
   println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
     //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
     sp = player.vel.dist(new PVector(0,0,0));
-    if(player.vel.z<0 && abs(player.pos.z+3200) <1000)  background(map(abs(player.pos.z+3200),0,1000,50,0 ),125);
-    else if(player.vel.z>0 && abs(player.pos.z-3200) <1000) background(map(abs(player.pos.z-3200),0,1000,220,0 ),125);
-    else if(player.vel.x<0 && abs(player.pos.x+6400) <1000) background(map(abs(player.pos.z+6400),0,1000,220,0 ),125);
-    else if(player.vel.x>0 && abs(player.pos.x-6400) <1000) background(map(abs(player.pos.x-6400),0,1000,220,0 ),125);
+    if(player.vel.z<0 && abs(player.pos.z+6400) <1000)  background(map(abs(player.pos.z+3200),0,1000,50,0 ),125);
+    else if(player.vel.z>0 && abs(player.pos.z-6400) <1000) background(map(abs(player.pos.z-3200),0,1000,50,0 ),125);
+    else if(player.vel.x<0 && abs(player.pos.x+12800) <1000) background(map(abs(player.pos.z+6400),0,1000,50,0 ),125);
+    else if(player.vel.x>0 && abs(player.pos.x-12800) <1000) background(map(abs(player.pos.x-6400),0,1000,50,0 ),125);
     else background(0,125);
     
  
@@ -518,7 +518,7 @@ void draw(){
         }
         for(int i=0;i<enemies.size();i++) {
           Enemy chara = (Enemy) enemies.get(i);
-          if(chara.isDead == false){
+          if(chara.isDead == false &&  player.pos.dist(chara.loc) < 1000 ){
           chara.draw();
           }
         }
@@ -547,7 +547,6 @@ void draw(){
                int j = joints[KinectPV2.JointType_HandRight].getState();
                if(j ==  KinectPV2.HandState_Open & bu > 60)
                {
-                 println("shoot");
                  player.shoot(30, 1);
                  shoot = 1;
                  //intじゃないとエラー？
