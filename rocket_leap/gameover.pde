@@ -1,5 +1,6 @@
+boolean button = false;
 void gameover(float edist){
-    client.write(6 +"\n"); 
+    client.write(7 +"\n"); 
     //message
     noStroke();
     textSize(86);
@@ -42,7 +43,8 @@ void gameover(float edist){
     //replay-box
     int replayX = 700;
     int replayY = (int)100;
-    if (replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30) fill(255, 0, 255);
+    if (replayX-90<=mouseX && mouseX<=replayX+90 && replayY-30<=mouseY && mouseY<=replayY+30
+    || button) fill(255, 0, 255);
     else  fill(255);
     rect(replayX-90, replayY-30, 180, 60);
     textSize(50);

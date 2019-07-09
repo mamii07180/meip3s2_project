@@ -12,7 +12,7 @@ void opening(){
     fill(255);
     text("The World is Nothing", w2, h2);
   }
-  else if (x[5] == 1.0) {
+  else if (x[5] == 1.0&&stateopening==0||x[5]==1.0&&stateopening==1) {
     textAlign(CENTER);
     background(0);
     textSize(80);
