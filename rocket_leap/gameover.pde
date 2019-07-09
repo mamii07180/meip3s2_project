@@ -1,6 +1,6 @@
 boolean button = false;
 void gameover(float edist){
-    client.write(6 +"\n"); 
+    client.write(7 +"\n"); 
     //message
     noStroke();
     textSize(86);

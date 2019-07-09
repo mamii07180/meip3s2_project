@@ -13,7 +13,7 @@ Controller leap = new Controller();         // leap という名前で Controlle
 //InteractionBox iBox;                        // InteractionBox オブジェクト（座標変換などをする）を宣言
 
 int state2 = 0;
-int state3 = 0; //OPとゲームを分けるやつ
+int state3 = 1; //OPとゲームを分けるやつ
 int state4=0;
 int state5=0;
 int posi = 0;
@@ -57,11 +57,11 @@ PImage img; //地球
 
 void setup() {
   //  s = new Server(this, 12345); // Start a simple server on a port
-  //  client = new Client(this, "157.82.200.251",12345); //takumi
+  //  client = new Client(this, "157.82.200.251",10000); //takumi
   //client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
    client = new Client(this, "157.82.202.205", 10000); //mamii
 
-  size(1280, 640);
+  size(2560, 1280);
   //  fullScreen(P3D);
   w2 = width / 2;
   h2 = height / 2;
@@ -76,9 +76,9 @@ void setup() {
   imageMode(CENTER);
   
   img = loadImage("chikyuu.png");
-  client.write(7 + " " + width + " " + height + "\n"); //縦横比
+//  client.write(7 + " " + width + " " + height + "\n"); //縦横比
   //opつけるときは消す（作業用）
-   // replace();
+    replace();
 //    earth = new Earth();
 }
 
@@ -107,7 +107,7 @@ void draw() {
   }
   else if (state3 == 1) { //opおわった後
     float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
-    if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
+    if (hp<=0 || edist<=80) { //HPがなくなったor到着したらおわり
       gameover(edist);
       println(hp + edist);
     } else { //--------------------ゲーム
@@ -171,7 +171,7 @@ void draw() {
       stroke(255);
       strokeWeight(1);
       rect(82, 22, 106, 18);
-      if (hp<=300)fill(255, 0, 0);
+      if (hp<=200)fill(255, 0, 0);
       else fill(0, 255, 0);
       text("HP", 30, 45);
       rectMode(CORNER);
@@ -410,7 +410,7 @@ class Enemy { //-------------------------------敵
     isDead = false;
     enebig=b;
     if(enebig ==1) println("big"+ size);
-    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10) + " " + (int)size * 10 + " " + enebig + "\n");
+    client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10) + " " + (int)size * 2 + " " + enebig + "\n");
     if(enebig==1) timebig = (int)millis();
     println(number,loc.x,+loc.y,size);
     delay(100);
