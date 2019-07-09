@@ -12,6 +12,7 @@ String input;
 int j = 15;
 int data[];
 int shoot; //timing of shoot
+int win = 0;
 float sp;
 int earth_e = 0;
 //stop
@@ -266,11 +267,11 @@ class Enemy extends Chara{ //-------------------------------敵
 }
 
 //stop
-int width=1120;
+int width=1600;
 int height=840;
 // 初期化//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  size(1120, 840, P3D);
+  size(1600, 840, P3D);
   //change
   s = new Server(this,10000);
   kinect = new KinectPV2(this);
@@ -344,13 +345,12 @@ void draw(){
     //background(0,0,0,125);
     float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
-    //int colVar=(int)scale/20; //点滅させる用(結局他のクラスで定義）
-
-    if(gameState==0)
+    
+    if(gamestate==0)
     {
       fill(0,255,0,127);
       textSize(100);
-      text("Waiting…", width * 0.6, height * 0.8);
+      text("Loading…", width * 0.6, height * 0.8);
       for(int i =0;i<start_num;i++)
       {
         angle[i] += 0.01;
@@ -488,6 +488,9 @@ void draw(){
             earth_x = data[1];
             earth_z = data[2];
          }
+         if(data[0] == 7)
+         {
+           win = 1;
           // Draw line using received coords
         }
         int x_send=int(player.pos.x/10);
@@ -596,7 +599,7 @@ void draw(){
           if(earth_e == 1)
           {
             float goaldis = player.pos.dist(new PVector(earth_x,0,earth_z));
-            if(goaldis<20) 
+            if(win ==1) 
             {
               background(0); 
               player.vel.x = 0;  player.vel.z = 0; 
