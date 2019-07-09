@@ -342,8 +342,8 @@ void draw(){
     background(0,0,0,125);
     float scale=(millis()-startTime)%2000;//サイズが変わる敵は時間で2倍まで（leapと揃える）
     if(scale>1000)scale=2000-scale;
-    int colVar=(int)scale/20; //点滅させる用
-  
+    //int colVar=(int)scale/20; //点滅させる用(結局他のクラスで定義）
+
     if(gameState==0)
     {
       fill(0,255,0,127);
@@ -612,7 +612,7 @@ void draw(){
               float distanceEarth=sqrt((earth_x-player.pos.x)*(earth_x-player.pos.x)+(earth_z-player.pos.z)*(earth_z-player.pos.z));
               int distanceEarth_new=(int)distanceEarth;
               textSize(40);
-              text("distance\n="+ distanceEarth_new * 10,0.1*width,0.75*height);
+              text("distance\n="+ distanceEarth_new ,0.1*width,0.75*height);
               text("" + player.pos.x + " " + player.pos.z, width/2, 30);
               textAlign(RIGHT, CENTER);
               text("life " + nf(player.life, 1, 0), width/3, height-30);
@@ -697,17 +697,17 @@ void input(){
            InputLeft=-InputLeft;//LeftDiffが負ならばInputも負に
            stroke(0,200,0);
            fill(0,200,0,155+colVar);
-           arrow(0.1*width,0.9*height,15,-1);
          }
          if(RightDiff<0)
          {
            InputRight=-InputRight;
            stroke(0,200,0);
            fill(0,200,0,155+colVar);
-           arrow(0.1*width,0.9*height,15,1);
          }
          if(InputLeft*InputRight<0)//左右の上下が反対なら回転
          {
+           int arrow_direction=int(InputLeft/abs(InputLeft));//LeftDiffが負の時に-1にRightが負の時に1に
+           arrow(0.1*width,0.9*height,15,arrow_direction);
            float Input=InputRight-InputLeft;
            player.roll(0.0f,Input, 0.0f);//y軸下向きなのでInputRightが正（右手が下がっている）なら時計周りに回転する
            theta -= Input;
