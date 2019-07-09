@@ -107,7 +107,7 @@ void draw() {
   }
   else if (state3 == 1) { //opおわった後
     float edist = dist(earth.loc.x, earth.loc.y, myself.loc.x, myself.loc.y);
-    if (hp<=0 || edist<=10) { //HPがなくなったor到着したらおわり
+    if (hp<=0 || edist<=45) { //HPがなくなったor到着したらおわり
       gameover(edist);
       println(hp + edist);
     } else { //--------------------ゲーム
@@ -401,6 +401,7 @@ class Enemy { //-------------------------------敵
   boolean isDead;
   int number;
   int enebig; //0:普通、b=1:強い敵
+  int timebig;
 
   Enemy(float x, float y, float dis, int ene_number, int b) { //b=0:普通、b=1:強い敵
     size = dis;
@@ -410,6 +411,7 @@ class Enemy { //-------------------------------敵
     enebig=b;
     if(enebig ==1) println("big"+ size);
     client.write(2 + " " + number + " " + (int)((loc.x - w2) * 10) + " " + (int)((loc.y - h2) * 10) + " " + (int)size * 10 + " " + enebig + "\n");
+    if(enebig==1) timebig = (int)millis();
     println(number,loc.x,+loc.y,size);
     delay(100);
     println(loc.x,loc.y);//個体番号、座標、半径を送信
@@ -420,7 +422,12 @@ class Enemy { //-------------------------------敵
     else fill(255 - aaa, 255, aaa);
     stroke(255 - aaa, 255, aaa);
     if(enebig == 1){
-      ellipse(loc.x, loc.y, size+(aaa)/10, size+(aaa)/10);
+      float scale = (millis()-timebig)%2000;
+      if (scale>1000) {
+        scale = 2000-scale;
+      }
+      println(scale);
+      ellipse(loc.x, loc.y, size*(1+scale/1000), size*(1+scale/1000));
     } else {
       ellipse(loc.x, loc.y, size, size);
     }
