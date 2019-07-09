@@ -310,7 +310,7 @@ void setup() {
   //textFont( createFont("Lucida Console", 20) );
   //地球用
   img = loadImage("earth.jpg");
-  sphere=createShape(SPHERE,100);
+  sphere=createShape(SPHERE,400);
   sphere.setTexture(img);
   sphere.setStrokeWeight(0);
   //スタート用
@@ -450,6 +450,7 @@ void draw(){
              player.pos.z = 100;
              player.vel.x = 0;
              player.vel.z = 0;
+             win = 0;
           } 
           if(data[0] ==2)
           {
@@ -521,7 +522,7 @@ void draw(){
         }
         for(int i=0;i<enemies.size();i++) {
           Enemy chara = (Enemy) enemies.get(i);
-          if(chara.isDead == false &&  player.pos.dist(chara.loc) < 1000 ){
+          if(chara.isDead == false &&  player.pos.dist(chara.loc) < 20000 ){
           chara.draw();
           }
         }
