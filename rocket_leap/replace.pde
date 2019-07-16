@@ -1,5 +1,5 @@
 void replace() {
-  hp = 1000;
+  hp = 500;
   hit = 0;
   ene_number = 0;
   enecount = 0;

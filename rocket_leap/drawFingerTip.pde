@@ -4,6 +4,7 @@ int state1=0;
 boolean big = false;
 float n, m;
 
+
 void drawFingerTip(float a, float b, float d, float e, int posi) {
   float fx, fy, x, y; //指の位置
   int trisize = 30;      
@@ -86,9 +87,11 @@ void drawFingerTip(float a, float b, float d, float e, int posi) {
                   println("big OK");
                   enemies.add(new Enemy(n, m, d, ene_number, 1)); //dは指の間の距離
                   enecountb++;
+                  song.play();
                 } else {
                   enemies.add(new Enemy(n, m, d, ene_number, 0));
                   enecount++;
+                  song.play();
                 }
                 int dead_ene_num = ene_number % 15;
                 if(enemies.size()>=dead_ene_num) {

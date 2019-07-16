@@ -1,7 +1,15 @@
 import com.leapmotion.leap.*;
 import processing.net.*;
-
-
+import ddf.minim.*;
+/*
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+import ddf.minim.signals.*;
+import ddf.minim.spi.*;
+import ddf.minim.ugens.*;
+*/
+Minim minim;//bgm
+AudioPlayer song, breakbgm;
 /**
  * simple 2D shooter game
  *
@@ -55,11 +63,12 @@ ImgList imgList;
 StukaEffect stukaEffect;
 PImage img; //地球
 
+
 void setup() {
   //  s = new Server(this, 12345); // Start a simple server on a port
   //  client = new Client(this, "157.82.200.251",10000); //takumi
-  //client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
-   client = new Client(this, "157.82.202.205", 10000); //mamii
+  client = new Client(this, "127.0.0.1", 12345); //自分でテストする用
+  // client = new Client(this, "157.82.202.205", 10000); //mamii
 
   size(2560, 1280);
   //  fullScreen(P3D);
@@ -80,6 +89,10 @@ void setup() {
   //opつけるときは消す（作業用）
     replace();
 //    earth = new Earth();
+
+  minim = new Minim( this ); //bgm
+  song = minim.loadFile( "decision15.mp3" );
+  breakbgm = minim.loadFile( "bomb1.mp3" );
 }
 
 void draw() {
@@ -170,7 +183,7 @@ void draw() {
       noFill();
       stroke(255);
       strokeWeight(1);
-      rect(82, 22, 106, 18);
+      rect(82, 22, 56, 18);
       if (hp<=200)fill(255, 0, 0);
       else fill(0, 255, 0);
       text("HP", 30, 45);
@@ -300,6 +313,7 @@ class Myself { //-------------------------ロケット
       if (abs(loc.x - e.loc.x) < size / 2 + e.size / 2 && abs(loc.y - e.loc.y) < size / 2 + e.size / 2) {
         isDead = true;
         stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)e.loc.x, (int)e.loc.y);
+        breakbgm.play();
         i = i++;
         e.isDead = true;
         hp = hp-100;
@@ -441,6 +455,7 @@ class Enemy { //-------------------------------敵
         b.isDead = true;
         hit = hit+1;
         stukaEffect.setEffect(Const.IMAGE_EXPLODE, (int)loc.x, (int)loc.y);
+        breakbgm.play();
         client.write(4+" "+number+" "+0+"\n");  //死滅した個体番号を送信
         break;
       }
@@ -545,4 +560,11 @@ float gap(float xx, float y, float z) {
   float a;
   a = sqrt(xx*xx+y*y+z*z);
   return a;
+}
+
+void stop()
+{
+  song.close();
+  minim.stop();
+  super.stop();
 }
