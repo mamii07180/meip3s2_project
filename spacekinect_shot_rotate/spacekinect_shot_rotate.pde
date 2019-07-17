@@ -1,10 +1,13 @@
 // SpaceShooting Sample / Written by n_ryota
 //change
-
+import ddf.minim.*;
 import processing.net.*;
 import KinectPV2.KJoint;
 import KinectPV2.*;
 KinectPV2 kinect;
+Minim minim;
+AudioPlayer song,song2;
+int so = 0;
 int bu = 0;
 Client c;
 Server s;
@@ -52,7 +55,7 @@ class Chara {
   int group;
   Chara(float _x, float _y, float _z, float _radius, int _group) {
     pos.x = _x; pos.y = _y; pos.z = _z;
-    radius = _radius; life = 100.0; group = _group;
+    radius = _radius; life = 50.0; group = _group;
   }
   void roll(float rotX, float rotY, float rotZ) {
     matrix.rotateY(radians(rotY));  matrix.rotateX(radians(rotX));  matrix.rotateZ(radians(rotZ));
@@ -273,6 +276,9 @@ int height=840;
 void setup() {
   size(1600, 840, P3D);
   //change
+  minim = new Minim(this);
+  song = minim.loadFile("spaceship01.mp3");
+  song2 = minim.loadFile("shoot.mp3");
   s = new Server(this,10000);
   kinect = new KinectPV2(this);
   kinect.enableSkeletonColorMap(true);
@@ -329,7 +335,7 @@ int drawcounter = 0;
 
 // 毎フレームの進行と描画///////////////////////////////////////////////////////////////////////////////////////////////////////
 void draw(){
-  println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
+ // println(player.vel.x,player.vel.z,player.pos.x,player.pos.z);
     //sp = sqrt(pow(player.vel.x,2) + pow(player.vel.z,2));
     sp = player.vel.dist(new PVector(0,0,0));
     if(player.vel.z<0 && abs(player.pos.z+6400) <1000)  background(map(abs(player.pos.z+3200),0,1000,50,0 ),125);
@@ -378,6 +384,7 @@ void draw(){
         if(data[1]==1)
          {
            gameState+=1;
+           
            startTime=millis();
          }
         if(data[1]==15)player.accel(5);  //starting accel
@@ -388,7 +395,12 @@ void draw(){
     
     
     if(gameState==1 && (millis()-startTime)/1000<=5)
-    {      
+    { 
+      if(so ==  0){
+        song.play();
+        delay(2000);
+        so = 1;
+      }
       int L=10000;
       for(int i=0;i<start_num;i++)
       {
@@ -418,6 +430,7 @@ void draw(){
          if(data[1]==1)
          {
            gameState+=1;
+            
            startTime=millis() / 1000.0;
          }
          if(data[1]==14)player.accel(5);  //starting accel
@@ -451,6 +464,7 @@ void draw(){
              player.vel.x = 0;
              player.vel.z = 0;
              win=0;
+             so = 0;
           } 
           if(data[0] ==2)
           {
@@ -553,7 +567,10 @@ void draw(){
                if(j ==  KinectPV2.HandState_Open & bu > 60)
                {
                  player.shoot(30, 1);
+                 song2.play();
+                 song2.rewind();
                  shoot = 1;
+                 
                  //intじゃないとエラー？
                  bu=0;
                }
@@ -678,7 +695,13 @@ void arrow(float x,float y,float size,int type)//typeが1なら右側-1なら左
   endShape(CLOSE);//閉じてね
   popMatrix();
 }
-
+void stop()
+{
+  song.close();
+  song2.close();
+  minim.stop();
+  super.stop();
+}
 float theta=0;
 // 毎フレームの入力//////////////////////////////////////////////////////////////////////////////////
 void input(){
@@ -734,7 +757,11 @@ void input(){
 
 // マウスボタンを押した瞬間
 void mousePressed() {
-  if(player.life>0 && mouseButton==LEFT) player.shoot(30, 1);
+  if(player.life>0 && mouseButton==LEFT) {
+    player.shoot(30, 1);
+    song2.play();
+    song2.rewind();
+  }
 }
 
 // 爆発エフェクトを追加
